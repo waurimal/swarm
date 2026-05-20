@@ -38,7 +38,7 @@
         
         /* 단어 날아가는 애니메이션 키프레임 (화면 밖에서 시작해서 완전 밖으로 나가도록 설정) */
         @keyframes flyRight {
-            0% { left: -50%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
+            0% { left: -100%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
             100% { left: 150%; transform: scale(1.1) rotate(8deg); opacity: 0; }
@@ -47,7 +47,7 @@
             0% { left: 150%; transform: scale(1.1) rotate(8deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { left: -50%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
+            100% { left: -100%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
         }
 
         .flying-word {
@@ -64,6 +64,8 @@
                 6px 0px 0px #fff, -6px 0px 0px #fff;
             opacity: 0;
             z-index: 10;
+            pointer-events: none;
+            will-change: left, opacity, transform; /* GPU 렌더링 최적화 활성화 */
         }
 
         /* 커스텀 스크롤바 */
@@ -113,8 +115,8 @@
         </button>
     </nav>
 
-    <!-- 메인 컨테이너 -->
-    <main class="flex-grow relative overflow-hidden p-4 flex flex-col items-center justify-center">
+    <!-- 메인 컨테이너 (레이아웃 붕괴 완전 방지용 h-0 flex-grow 추가) -->
+    <main class="flex-grow h-0 w-full relative p-4 flex flex-col items-center justify-center">
         
         <!-- 1. 심플한 홈 화면 -->
         <div id="screen-home" class="screen active flex-col items-center justify-center w-full max-w-5xl text-center h-full">
@@ -1075,6 +1077,11 @@
             document.getElementById('loading-overlay').style.display = 'flex';
 
             state.currentUnit = state.units.find(u => u.id === unitId);
+            // 단원 검색 실패시 방어 조치
+            if (!state.currentUnit) {
+                state.currentUnit = { title: "기본 단원", targets: ["단어"] };
+            }
+
             state.studentInfo = { 
                 mode: mode,
                 difficulty: difficulty,
@@ -1159,7 +1166,8 @@
 
                 state.roomCode = roomCode;
                 state.isHost = false;
-                state.currentUnit = state.units.find(u => u.id === roomData.unitId);
+                state.currentUnit = state.units.find(u => u.id === roomData.unitId) || { title: roomData.unitTitle || "기본 단원", targets: roomData.gameWords || ["단어"] };
+                
                 state.studentInfo = {
                     mode: roomData.mode,
                     difficulty: roomData.difficulty,
@@ -1361,7 +1369,7 @@
         // ====== 대결 게임방 시작 트리거 ======
         window.startMultiplayerGame = async function() {
             if (!state.roomCode) return;
-            const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', state.roomCode);
+            const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
             try {
                 await updateDoc(roomRef, {
                     status: 'playing'
@@ -1417,6 +1425,12 @@
             if(!name) return showAlert("이름을 입력해주세요!");
 
             state.currentUnit = state.units.find(u => u.id === unitId);
+            
+            // 만약을 위해 기본값 보강 (Bug 1 방어장치)
+            if (!state.currentUnit) {
+                state.currentUnit = { title: "기본 단원", targets: ["단어"] };
+            }
+
             state.studentInfo = { 
                 mode: mode,
                 difficulty: difficulty,
@@ -1454,7 +1468,11 @@
             document.getElementById('game-answer').value = '';
             
             navigate('game');
-            startGameAnimation();
+            
+            // 브라우저 렌더링 파이프라인(Reflow) 완료 후 애니메이션을 안전하게 시작하기 위해 50ms 지연 부여 (Bug 1 완전 해결)
+            setTimeout(() => {
+                startGameAnimation();
+            }, 50);
         }
 
         function startGameAnimation() {
