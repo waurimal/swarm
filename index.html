@@ -275,6 +275,26 @@
                 <h2 class="text-4xl font-jua text-center text-primary mb-8">내 정보 입력</h2>
                 
                 <div class="space-y-6">
+                    <!-- 게임 모드 및 난이도 추가 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">게임 모드</label>
+                            <select id="student-mode" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold cursor-pointer hover:border-primary transition text-slate-700">
+                                <option value="1인용 게임">1인용 게임</option>
+                                <option value="1:1 게임">1:1 게임</option>
+                                <option value="팀 대결 게임">팀 대결 게임</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">난이도</label>
+                            <select id="student-difficulty" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold cursor-pointer hover:border-primary transition text-slate-700">
+                                <option value="easy">하 (느림, 적은 단어)</option>
+                                <option value="normal" selected>중 (보통)</option>
+                                <option value="hard">상 (빠름, 많은 단어)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
                         <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 cursor-pointer">
@@ -449,8 +469,8 @@
                                 <th class="p-5 font-bold text-center w-24 text-lg">순위</th>
                                 <th class="p-5 font-bold text-lg">단원명</th>
                                 <th class="p-5 font-bold text-center text-lg">학년 / 반</th>
-                                <th class="p-5 font-bold text-lg">이름</th>
-                                <th class="p-5 font-bold text-right text-secondary text-lg">점수</th>
+                                <th class="p-5 font-bold text-lg">이름 <span class="text-sm font-normal text-slate-300 ml-1">(모드)</span></th>
+                                <th class="p-5 font-bold text-right text-secondary text-lg">점수 <span class="text-sm font-normal text-slate-400 ml-1">(난이도)</span></th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body" class="bg-white divide-y divide-slate-100">
@@ -866,6 +886,8 @@
         const colors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
 
         window.prepareGame = function() {
+            const mode = document.getElementById('student-mode').value;
+            const difficulty = document.getElementById('student-difficulty').value;
             const unitId = document.getElementById('student-unit').value;
             const grade = document.getElementById('student-grade').value;
             const classNum = document.getElementById('student-class').value;
@@ -876,7 +898,14 @@
             if(!name) return showAlert("이름을 입력해주세요!");
 
             state.currentUnit = state.units.find(u => u.id === unitId);
-            state.studentInfo = { grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
+            state.studentInfo = { 
+                mode: mode,
+                difficulty: difficulty,
+                grade: Number(grade), 
+                classNum: Number(classNum), 
+                stuNum: Number(stuNum), 
+                name: name 
+            };
             
             // 단원의 모든 단어를 무작위로 섞어서 게임 문제 목록으로 설정
             const targetsArray = state.currentUnit.targets || [state.currentUnit.target];
@@ -905,7 +934,17 @@
             const canvas = document.getElementById('game-canvas');
             canvas.innerHTML = ''; 
             
-            state.gameTargetCount = Math.floor(Math.random() * 5) + 4;
+            // 난이도에 따른 세팅
+            let minTarget, maxTarget, minDur, addDur, maxDelay;
+            if (state.studentInfo.difficulty === 'easy') {
+                minTarget = 3; maxTarget = 6; minDur = 6; addDur = 4; maxDelay = 4; // 느리고 적음
+            } else if (state.studentInfo.difficulty === 'hard') {
+                minTarget = 6; maxTarget = 10; minDur = 2; addDur = 2.5; maxDelay = 2; // 빠르고 많음
+            } else {
+                minTarget = 4; maxTarget = 8; minDur = 4; addDur = 4; maxDelay = 3; // 중간
+            }
+
+            state.gameTargetCount = Math.floor(Math.random() * (maxTarget - minTarget + 1)) + minTarget;
             const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
 
             const autoDistractors = generateAutoDistractors(state.currentTargetWord, 10);
@@ -928,8 +967,9 @@
                 
                 // 수정사항: 입력칸(하단 30%)에 겹치지 않도록 높이를 상단 10% ~ 60% 영역으로 제한
                 const topPercent = Math.random() * 50 + 10; 
-                const duration = Math.random() * 5 + 4; 
-                const delay = Math.random() * 4; 
+                // 난이도별 속도/지연 적용
+                const duration = Math.random() * addDur + minDur; 
+                const delay = Math.random() * maxDelay; 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 
@@ -1045,6 +1085,8 @@
                 await addDoc(scoresRef, {
                     unitId: state.currentUnit.id,
                     unitTitle: state.currentUnit.title,
+                    mode: state.studentInfo.mode,
+                    difficulty: state.studentInfo.difficulty,
                     grade: state.studentInfo.grade,
                     classNum: state.studentInfo.classNum,
                     stuNum: state.studentInfo.stuNum,
@@ -1105,13 +1147,17 @@
                 else if(index === 1) rankTrophy = '<i class="fas fa-trophy text-slate-400 text-2xl"></i>';
                 else if(index === 2) rankTrophy = '<i class="fas fa-trophy text-amber-700 text-2xl"></i>';
 
+                let diffLabel = "보통";
+                if(s.difficulty === "easy") diffLabel = "하";
+                else if(s.difficulty === "hard") diffLabel = "상";
+
                 return `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
                     <td class="p-5 text-center font-jua text-xl text-slate-500">${rankTrophy}</td>
                     <td class="p-5 font-bold text-slate-700 text-lg">${s.unitTitle}</td>
                     <td class="p-5 text-center text-slate-500 font-medium">${s.grade}학년 ${s.classNum}반</td>
-                    <td class="p-5 font-bold text-lg">${s.name} <span class="text-sm font-normal text-slate-400 ml-1">(${s.stuNum}번)</span></td>
-                    <td class="p-5 text-right font-jua text-3xl text-primary">${s.score}</td>
+                    <td class="p-5 font-bold text-lg">${s.name} <span class="text-sm font-normal text-slate-400 ml-1">(${s.mode || '1인용 게임'})</span></td>
+                    <td class="p-5 text-right font-jua text-3xl text-primary">${s.score} <span class="text-sm font-normal text-slate-400 font-sans">[${diffLabel}]</span></td>
                 </tr>
             `}).join('');
         }
