@@ -387,7 +387,7 @@
             </div>
         </div>
 
-        <!-- 6. 게임 화면 (절대 좌표 캔버스로 높이 붕괴 완전 차단) -->
+        <!-- 6. 게임 화면 -->
         <div id="screen-game" class="screen flex-1 flex-col w-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100 min-h-[450px]">
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
@@ -421,8 +421,8 @@
                 <!-- 애니메이션 단어 추가 영역 -->
             </div>
 
-            <!-- 컴팩트한 하단 정답 입력창 -->
-            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
+            <!-- 컴팩트한 하단 정답 입력창 (애니메이션이 모두 끝날 때까지 hidden 상태로 숨김 처리) -->
+            <div id="answer-input-container" class="hidden absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
                 <div class="bg-white rounded-[28px] shadow-2xl p-4 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
                     <p class="text-slate-700 font-jua mb-2 text-lg text-center">정답은 몇 개?</p>
                     <div class="flex gap-2 w-full justify-center items-center">
@@ -594,27 +594,24 @@
             isHost: false,
             multiAction: 'create',
             roomListenerUnsubscribe: null,
-            scoresUnsubscribe: null // 명예의 전당 실시간 동기화를 위한 리스너
+            scoresUnsubscribe: null,
+            animationTimeout: null
         };
 
-        // 배경음악(효과음) 재생 함수
+        // 배경음악(효과음) 재생 함수 - 게임 시작용
         window.playBGM = function() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 const ctx = new AudioContext();
-                
-                // 경쾌한 등장 효과음 (미 도 솔 도)
                 const notes = [261.63, 329.63, 392.00, 523.25]; 
                 notes.forEach((freq, i) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
-                    osc.type = 'sine'; // 부드러운 소리
+                    osc.type = 'sine';
                     osc.frequency.value = freq;
-                    
                     osc.connect(gain);
                     gain.connect(ctx.destination);
-                    
                     const startTime = ctx.currentTime + i * 0.1;
                     osc.start(startTime);
                     gain.gain.setValueAtTime(0, startTime);
@@ -622,6 +619,67 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
                     osc.stop(startTime + 0.4);
                 });
+            } catch(e) {
+                console.log("Audio play prevented:", e);
+            }
+        }
+
+        // 결과에 따른 효과음 재생 함수 (정답/오답/근접)
+        window.playResultSound = function(diff) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                
+                if (diff === 0) {
+                    // 정답: 경쾌한 승리음 (빰-빠밤~)
+                    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                    notes.forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.value = freq;
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        const startTime = ctx.currentTime + i * 0.15;
+                        osc.start(startTime);
+                        gain.gain.setValueAtTime(0, startTime);
+                        gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+                        osc.stop(startTime + 0.5);
+                    });
+                } else if (diff <= 2) {
+                    // 아까움: 띠-딩~
+                    const notes = [392.00, 329.63]; // G4, E4
+                    notes.forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        const startTime = ctx.currentTime + i * 0.2;
+                        osc.start(startTime);
+                        gain.gain.setValueAtTime(0, startTime);
+                        gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+                        osc.stop(startTime + 0.5);
+                    });
+                } else {
+                    // 틀림: 하강하는 삐이익~ 음
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(250, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.6);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime);
+                    gain.gain.setValueAtTime(0, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+                    osc.stop(ctx.currentTime + 0.6);
+                }
             } catch(e) {
                 console.log("Audio play prevented:", e);
             }
@@ -650,6 +708,10 @@
         }
 
         window.navigate = function(screenId) {
+            if (state.animationTimeout) {
+                clearTimeout(state.animationTimeout);
+                state.animationTimeout = null;
+            }
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(`screen-${screenId}`).classList.add('active');
             
@@ -896,7 +958,7 @@
             studentSelect.innerHTML = '<option value="">단원을 선택해주세요</option>' + options;
         }
 
-        // 명예의 전당 점수 실시간 동기화 (버그 2 갱신 문제 해결)
+        // 명예의 전당 점수 실시간 동기화
         function listenToScoresRealtime() {
             if (!state.db) return;
             if (state.scoresUnsubscribe) return;
@@ -1254,6 +1316,7 @@
         }
 
         window.leaveRoomLocal = function() {
+            if (state.animationTimeout) { clearTimeout(state.animationTimeout); state.animationTimeout = null; }
             cleanupRoomListener();
             state.roomCode = null;
             navigate('home');
@@ -1311,6 +1374,13 @@
             
             navigate('game');
             
+            // 기존 타이머 클리어
+            if (state.animationTimeout) clearTimeout(state.animationTimeout);
+            
+            // 애니메이션 진행 중일 땐 입력칸을 숨김 (투명+클릭방지 처리)
+            document.getElementById('answer-input-container').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('answer-input-container').classList.remove('opacity-100');
+
             setTimeout(() => {
                 startGameAnimation();
             }, 50);
@@ -1339,29 +1409,31 @@
             
             playBGM();
 
-            // 겹침 방지를 위한 4개 차선(Lane) 시스템: 5%, 15%, 25%, 35% 영역 (하단을 침범하지 않음)
             const lanes = [5, 15, 25, 35];
             let lastLane = -1;
+            let maxAnimationTime = 0; // 애니메이션이 끝나는 시점을 계산하기 위한 변수
 
             words.forEach((wordObj, index) => {
                 const el = document.createElement('div');
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                // 차선 결정 (바로 이전 단어와 같은 높이에서 나오는 것을 방지)
                 let laneIdx;
                 do {
                     laneIdx = Math.floor(Math.random() * lanes.length);
                 } while (laneIdx === lastLane && lanes.length > 1);
                 lastLane = laneIdx;
 
-                // 차선에서 위아래로 약간만 흔들어 자연스러움 연출
                 const topPercent = lanes[laneIdx] + (Math.random() * 6 - 3); 
                 const duration = Math.random() * addDur + minDur; 
-                
-                // 겹치지 않게 대기 시간을 길게 벌림 (스폰 간격 * index)
                 const delay = (index * spawnInterval) + (Math.random() * (spawnInterval * 0.3));
                 
+                // 해당 요소의 총 애니메이션 경과 시간 계산
+                const totalTime = duration + delay;
+                if (totalTime > maxAnimationTime) {
+                    maxAnimationTime = totalTime;
+                }
+
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
                 const color = textColors[Math.floor(Math.random() * textColors.length)];
                 
@@ -1376,7 +1448,15 @@
                 canvas.appendChild(el);
             });
             
-            document.getElementById('game-answer').focus();
+            // 모든 단어가 지나간 후, 정답 입력칸 나타나게 하기 (+0.5초 여유시간)
+            state.animationTimeout = setTimeout(() => {
+                const answerContainer = document.getElementById('answer-input-container');
+                if (answerContainer) {
+                    answerContainer.classList.remove('opacity-0', 'pointer-events-none');
+                    answerContainer.classList.add('opacity-100');
+                    document.getElementById('game-answer').focus();
+                }
+            }, (maxAnimationTime * 1000) + 500);
         }
 
         window.submitAnswer = async function() {
@@ -1390,6 +1470,9 @@
             const titleEl = document.getElementById('result-title');
             const descEl = document.getElementById('result-desc');
             const iconEl = document.getElementById('result-icon');
+
+            // 점수에 따른 사운드 재생 호출
+            playResultSound(diff);
 
             if(diff === 0) { score = 100; titleEl.innerText = "정답입니다!"; descEl.innerText = `완벽하게 맞췄어요! (정답: ${state.gameTargetCount})`; iconEl.className = "fas fa-check-circle text-8xl text-green-500 mb-6"; }
             else if(diff === 1) { score = 80; titleEl.innerText = "거의 다 왔어요!"; descEl.innerText = `1개 차이! (정답: ${state.gameTargetCount})`; iconEl.className = "fas fa-star text-8xl text-yellow-400 mb-6"; }
