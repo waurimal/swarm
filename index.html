@@ -75,7 +75,28 @@
         <p class="text-xl font-jua text-slate-600">서버 연결 중...</p>
     </div>
 
-    <!-- 동적 네비게이션 바 (초기 및 게임 화면에선 숨김) -->
+    <!-- 커스텀 알림(Alert) 모달 -->
+    <div id="modal-alert" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+        <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl mx-4 transform transition-all">
+            <i class="fas fa-info-circle text-4xl text-primary mb-4"></i>
+            <p id="modal-alert-msg" class="text-lg font-bold text-slate-700 mb-8 whitespace-pre-wrap"></p>
+            <button onclick="closeAlert()" class="bg-primary hover:bg-purple-500 text-white px-8 py-3 rounded-xl font-jua text-xl transition w-full">확인</button>
+        </div>
+    </div>
+
+    <!-- 커스텀 확인(Confirm) 모달 -->
+    <div id="modal-confirm" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+        <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl mx-4 transform transition-all">
+            <i class="fas fa-question-circle text-4xl text-accent mb-4"></i>
+            <p id="modal-confirm-msg" class="text-lg font-bold text-slate-700 mb-8 whitespace-pre-wrap"></p>
+            <div class="flex gap-3 justify-center">
+                <button id="modal-confirm-yes" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-jua text-xl transition">예, 할게요</button>
+                <button onclick="closeConfirm()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-3 rounded-xl font-jua text-xl transition">아니오</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 동적 네비게이션 바 -->
     <nav id="main-nav" class="hidden bg-white shadow-sm p-4 px-6 justify-between items-center z-10 shrink-0">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
             <i class="fas fa-bug text-primary text-3xl"></i>
@@ -91,12 +112,12 @@
         
         <!-- 1. 심플한 홈 화면 -->
         <div id="screen-home" class="screen active flex-col items-center justify-center w-full max-w-5xl text-center h-full">
+            <div id="home-school-title" class="bg-primary text-white px-8 py-2 rounded-full font-jua text-3xl mb-8 shadow-md inline-block">학교 정보 로딩중...</div>
             <i class="fas fa-search text-7xl text-primary mb-6 animate-bounce"></i>
             <h1 class="text-7xl font-jua text-slate-800 mb-4 tracking-wider">Counting Words</h1>
             <p class="text-xl text-slate-500 mb-16 font-medium">좌우에서 날아오는 단어들 중 <span class="text-accent font-bold">정답 단어</span>의 개수를 찾아보세요!</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full px-4">
-                
                 <!-- 학생 게임 시작 버튼 -->
                 <button onclick="navigate('student_setup')" class="group bg-white border-4 border-primary hover:bg-primary p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
                     <div class="w-28 h-28 bg-purple-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
@@ -115,23 +136,42 @@
                     <p class="text-slate-500 mt-3 font-bold transition duration-300 text-slate-600">전체 순위 확인하기</p>
                 </button>
 
-                <!-- 교사 모드 버튼 -->
-                <button onclick="navigate('teacher')" class="group bg-white border-4 border-slate-300 hover:bg-slate-700 hover:border-slate-700 p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
+                <!-- 교사 모드 진입 (비밀번호 확인으로 연결) -->
+                <button onclick="navigate('teacher_login')" class="group bg-white border-4 border-slate-300 hover:bg-slate-700 hover:border-slate-700 p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
                     <div class="w-28 h-28 bg-slate-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
                         <i class="fas fa-chalkboard-teacher text-6xl text-slate-600"></i>
                     </div>
                     <span class="text-3xl font-jua text-slate-800 group-hover:text-white transition duration-300">교사 모드</span>
-                    <p class="text-slate-500 group-hover:text-slate-300 mt-3 font-bold transition duration-300">단원 및 단어 설정</p>
+                    <p class="text-slate-500 group-hover:text-slate-300 mt-3 font-bold transition duration-300">관리자 전용 설정</p>
                 </button>
             </div>
         </div>
 
-        <!-- 2. 교사 모드 화면 -->
+        <!-- 2. 교사 모드 로그인 (비밀번호 확인) -->
+        <div id="screen-teacher_login" class="screen flex-col items-center justify-center w-full max-w-sm h-full">
+            <div class="bg-white rounded-3xl shadow-2xl p-10 w-full text-center border border-slate-100">
+                <i class="fas fa-lock text-6xl text-slate-600 mb-6"></i>
+                <h2 class="text-3xl font-jua text-slate-800 mb-2">교사 모드 접속</h2>
+                <p class="text-sm text-slate-500 mb-8 font-medium">관리자 비밀번호를 입력해주세요.</p>
+                <input type="password" id="teacher-pwd-input" placeholder="비밀번호" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center text-xl font-bold outline-none focus:border-slate-600 mb-6 bg-slate-50" onkeydown="if(event.key === 'Enter') checkTeacherPassword()">
+                <button onclick="checkTeacherPassword()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-jua text-2xl hover:bg-slate-700 transition shadow-md mb-3">접속하기</button>
+                <button onclick="navigate('home')" class="w-full py-3 text-slate-500 hover:text-slate-700 font-bold transition text-sm">뒤로 가기</button>
+            </div>
+        </div>
+
+        <!-- 3. 교사 모드 대시보드 화면 -->
         <div id="screen-teacher" class="screen flex-col w-full max-w-5xl h-full">
-            <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col overflow-hidden">
-                <h2 class="text-3xl font-jua text-primary mb-6 border-b pb-4"><i class="fas fa-cog mr-2"></i>단원 및 단어 설정 (교사 전용)</h2>
+            <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col overflow-hidden relative">
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow overflow-hidden">
+                <!-- 탭 메뉴 -->
+                <div class="flex gap-6 mb-6 border-b-2 border-slate-100 pb-0">
+                    <button onclick="switchTeacherTab('units')" id="tab-btn-units" class="text-xl font-jua text-primary border-b-4 border-primary px-4 py-2 mb-[-2px] transition">단원 관리</button>
+                    <button onclick="switchTeacherTab('scores')" id="tab-btn-scores" class="text-xl font-jua text-slate-400 border-b-4 border-transparent px-4 py-2 mb-[-2px] hover:text-slate-600 transition">학생 기록 관리</button>
+                    <button onclick="switchTeacherTab('settings')" id="tab-btn-settings" class="text-xl font-jua text-slate-400 border-b-4 border-transparent px-4 py-2 mb-[-2px] hover:text-slate-600 transition">환경 설정</button>
+                </div>
+                
+                <!-- 탭 1: 단원 관리 -->
+                <div id="teacher-tab-units" class="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow overflow-hidden h-full">
                     <!-- 입력 폼 -->
                     <div class="col-span-1 bg-slate-50 p-6 rounded-2xl border border-slate-200 overflow-y-auto">
                         <h3 class="text-xl font-bold mb-5 text-slate-700">새 단원 추가</h3>
@@ -145,23 +185,62 @@
                                 <textarea id="unit-target" rows="4" class="w-full p-3 rounded-lg border-2 border-slate-200 focus:border-accent outline-none" placeholder="예: apple, banana, cat (쉼표로 구분해서 여러 개 입력 가능)"></textarea>
                                 <p class="text-xs text-slate-400 mt-2 font-medium">※ 오답(함정) 단어는 시스템이 헷갈리도록 자동으로 생성해 줍니다.</p>
                             </div>
-                            <button onclick="saveUnit()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition text-lg shadow-md">저장하기</button>
+                            <button onclick="saveUnit()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition text-lg shadow-md"><i class="fas fa-plus mr-2"></i>단원 추가하기</button>
                         </div>
                     </div>
-                    
                     <!-- 리스트 뷰 -->
                     <div class="col-span-2 flex flex-col h-full">
-                        <h3 class="text-xl font-bold mb-5 text-slate-700">등록된 단원 목록</h3>
                         <div class="overflow-y-auto flex-grow pr-2 space-y-3" id="unit-list">
-                            <!-- JS 렌더링 -->
                             <div class="text-center text-slate-400 py-10 font-medium">등록된 단원이 없습니다. 좌측에서 추가해주세요.</div>
                         </div>
                     </div>
                 </div>
+
+                <!-- 탭 2: 학생 기록 관리 -->
+                <div id="teacher-tab-scores" class="hidden flex-col flex-grow overflow-hidden h-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-slate-700">학생 플레이 기록</h3>
+                        <button onclick="fetchTeacherScores()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold transition"><i class="fas fa-sync-alt mr-2"></i>새로고침</button>
+                    </div>
+                    <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-4 font-bold text-sm">단원명</th>
+                                    <th class="p-4 font-bold text-sm text-center">학년 / 반</th>
+                                    <th class="p-4 font-bold text-sm">이름 (번호)</th>
+                                    <th class="p-4 font-bold text-sm text-right">점수</th>
+                                    <th class="p-4 font-bold text-sm text-center w-24">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacher-score-list" class="bg-white divide-y divide-slate-100 text-sm">
+                                <!-- JS 렌더링 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 탭 3: 환경 설정 -->
+                <div id="teacher-tab-settings" class="hidden flex-col h-full max-w-md mx-auto w-full pt-10">
+                    <h3 class="text-2xl font-jua text-slate-700 mb-8 text-center">학교 및 비밀번호 설정</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">학교명 표기</label>
+                            <input type="text" id="setting-school-name" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none font-bold text-lg text-center" placeholder="예: OO초등학교">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">교사 모드 접속 비밀번호 변경</label>
+                            <input type="text" id="setting-pwd" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-slate-600 outline-none font-bold text-lg text-center" placeholder="비밀번호 설정">
+                            <p class="text-xs text-center text-slate-400 mt-2">안전한 번호로 설정하고 기억해주세요. (초기값: 0000)</p>
+                        </div>
+                        <button onclick="saveSettings()" class="w-full py-4 mt-6 bg-primary hover:bg-purple-500 text-white rounded-xl font-jua text-2xl transition shadow-lg"><i class="fas fa-save mr-2"></i>변경사항 저장</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- 3. 학생 설정 화면 -->
+        <!-- 4. 학생 설정 화면 -->
         <div id="screen-student_setup" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-10 w-full border border-slate-100">
                 <h2 class="text-4xl font-jua text-center text-primary mb-8">내 정보 입력</h2>
@@ -213,7 +292,7 @@
             </div>
         </div>
 
-        <!-- 4. 게임 화면 -->
+        <!-- 5. 게임 화면 -->
         <div id="screen-game" class="screen flex-col w-full h-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100">
             <!-- 상단 정보 -->
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
@@ -222,7 +301,7 @@
                     <span id="game-target-word" class="text-4xl font-jua text-accent">word</span>
                 </div>
                 <!-- 게임 중 나가기 버튼 -->
-                <button onclick="if(confirm('게임을 종료하시겠습니까? 점수가 저장되지 않습니다.')) navigate('home')" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
+                <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => navigate('home'))" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
                     나가기 <i class="fas fa-sign-out-alt ml-1"></i>
                 </button>
             </div>
@@ -232,19 +311,19 @@
                 <!-- 애니메이션 요소 추가 영역 -->
             </div>
 
-            <!-- 하단 정답 입력창 -->
-            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
-                <div class="bg-white rounded-3xl shadow-2xl p-8 border-4 border-secondary flex flex-col items-center">
-                    <p class="text-slate-700 font-jua mb-4 text-2xl text-center">정답 단어가 몇 개 지나갔나요?</p>
-                    <div class="flex gap-3 w-full">
-                        <input type="number" id="game-answer" placeholder="개수 입력" class="flex-grow p-4 rounded-xl border-2 border-slate-200 text-center text-3xl font-bold outline-none focus:border-accent bg-slate-50">
-                        <button onclick="submitAnswer()" class="bg-accent hover:bg-orange-600 text-white px-8 rounded-xl font-jua text-3xl transition whitespace-nowrap shadow-md">확인</button>
+            <!-- 수정사항 반영: 더 작아지고 둥근 느낌의 컴팩트한 하단 정답 입력창 -->
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-sm px-4">
+                <div class="bg-white rounded-[24px] shadow-xl p-6 border-2 border-[#dcfd8b] flex flex-col items-center">
+                    <p class="text-slate-700 font-jua mb-3 text-xl text-center">정답 단어가 몇 개 지나갔나요?</p>
+                    <div class="flex gap-2 w-full">
+                        <input type="number" id="game-answer" class="flex-grow p-3 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자">
+                        <button onclick="submitAnswer()" class="bg-[#ff823a] hover:bg-orange-600 text-white px-6 rounded-xl font-jua text-2xl transition whitespace-nowrap shadow-sm">확인</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 5. 결과 화면 -->
+        <!-- 6. 결과 화면 -->
         <div id="screen-result" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-12 flex flex-col items-center border border-slate-100 w-full">
                 <i id="result-icon" class="fas fa-check-circle text-8xl text-green-500 mb-6"></i>
@@ -263,7 +342,7 @@
             </div>
         </div>
 
-        <!-- 6. 명예의 전당 -->
+        <!-- 7. 명예의 전당 -->
         <div id="screen-leaderboard" class="screen flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
@@ -314,12 +393,13 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global State
         const state = {
             units: [],
             scores: [],
+            config: { schoolName: '카운팅워즈 학교', teacherPassword: '0000' }, // 환경설정 초기값
             currentUnit: null,
             currentTargetWord: '',
             studentInfo: null,
@@ -329,13 +409,38 @@
             userId: null
         };
 
+        // --- Custom Modals ---
+        window.showAlert = function(msg) {
+            document.getElementById('modal-alert-msg').innerText = msg;
+            document.getElementById('modal-alert').classList.remove('hidden');
+        }
+        window.closeAlert = function() {
+            document.getElementById('modal-alert').classList.add('hidden');
+        }
+        window.showConfirm = function(msg, onYesCallback) {
+            document.getElementById('modal-confirm-msg').innerText = msg;
+            const yesBtn = document.getElementById('modal-confirm-yes');
+            // Remove old event listeners
+            yesBtn.replaceWith(yesBtn.cloneNode(true));
+            const newYesBtn = document.getElementById('modal-confirm-yes');
+            newYesBtn.addEventListener('click', () => {
+                closeConfirm();
+                if(onYesCallback) onYesCallback();
+            });
+            document.getElementById('modal-confirm').classList.remove('hidden');
+        }
+        window.closeConfirm = function() {
+            document.getElementById('modal-confirm').classList.add('hidden');
+        }
+
+
         // Navigation
         window.navigate = function(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(`screen-${screenId}`).classList.add('active');
             
             const navBar = document.getElementById('main-nav');
-            if (screenId === 'home' || screenId === 'game') {
+            if (screenId === 'home' || screenId === 'game' || screenId === 'teacher_login') {
                 navBar.classList.add('hidden');
                 navBar.classList.remove('flex');
             } else {
@@ -344,6 +449,7 @@
             }
             
             if(screenId === 'leaderboard') fetchScores();
+            if(screenId === 'home') document.getElementById('teacher-pwd-input').value = '';
         };
 
         // Initialize Firebase
@@ -372,16 +478,88 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         state.userId = user.uid;
-                        await fetchUnits();
+                        await fetchConfig(); // 환경설정 로드
+                        await fetchUnits();  // 단원 정보 로드
                         document.getElementById('loading-overlay').style.display = 'none';
                     }
                 });
             } catch (e) {
                 console.error("Firebase 초기화 에러:", e);
-                alert("데이터베이스 연결 실패!\n상세 에러: " + e.message);
+                showAlert("데이터베이스 연결 실패!\n상세 에러: " + e.message);
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         }
+
+        // ====== 시스템 환경 설정 (학교명 & 비밀번호) ======
+        async function fetchConfig() {
+            try {
+                const configRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'config', 'main');
+                const docSnap = await getDoc(configRef);
+                if (docSnap.exists()) {
+                    state.config = docSnap.data();
+                } else {
+                    // 첫 접속 시 초기 데이터 생성
+                    await setDoc(configRef, state.config);
+                }
+                updateSchoolNameUI();
+            } catch (e) {
+                console.warn("설정 정보를 불러오지 못했습니다.", e);
+            }
+        }
+
+        function updateSchoolNameUI() {
+            document.getElementById('home-school-title').innerText = state.config.schoolName;
+            document.getElementById('setting-school-name').value = state.config.schoolName;
+            document.getElementById('setting-pwd').value = state.config.teacherPassword;
+        }
+
+        window.saveSettings = async function() {
+            const newSchool = document.getElementById('setting-school-name').value.trim();
+            const newPwd = document.getElementById('setting-pwd').value.trim();
+
+            if (!newSchool || !newPwd) return showAlert('학교명과 비밀번호를 모두 입력해주세요.');
+
+            try {
+                const configRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'config', 'main');
+                await updateDoc(configRef, {
+                    schoolName: newSchool,
+                    teacherPassword: newPwd
+                });
+                state.config.schoolName = newSchool;
+                state.config.teacherPassword = newPwd;
+                updateSchoolNameUI();
+                showAlert('설정이 성공적으로 저장되었습니다.');
+            } catch(e) {
+                showAlert('설정 저장에 실패했습니다: ' + e.message);
+            }
+        }
+
+        window.checkTeacherPassword = function() {
+            const inputPwd = document.getElementById('teacher-pwd-input').value;
+            if(inputPwd === state.config.teacherPassword) {
+                document.getElementById('teacher-pwd-input').value = '';
+                navigate('teacher');
+                switchTeacherTab('units');
+            } else {
+                showAlert('비밀번호가 일치하지 않습니다.');
+            }
+        }
+
+        // 교사모드 내 탭 전환 로직
+        window.switchTeacherTab = function(tabName) {
+            ['units', 'scores', 'settings'].forEach(name => {
+                document.getElementById(`teacher-tab-${name}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${name}`).className = "text-xl font-jua text-slate-400 border-b-4 border-transparent px-4 py-2 mb-[-2px] hover:text-slate-600 transition";
+            });
+            document.getElementById(`teacher-tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`teacher-tab-${tabName}`).classList.add('flex');
+            document.getElementById(`tab-btn-${tabName}`).className = "text-xl font-jua text-primary border-b-4 border-primary px-4 py-2 mb-[-2px] transition";
+            
+            if(tabName === 'scores') {
+                fetchTeacherScores();
+            }
+        }
+
 
         // ====== 교사 모드 (단원 관리) ======
         async function fetchUnits() {
@@ -408,14 +586,13 @@
             const title = document.getElementById('unit-title').value.trim();
             const targetRaw = document.getElementById('unit-target').value.trim();
             
-            // 쉼표 단위로 쪼개어 배열로 만들기
             const targets = targetRaw.split(',').map(s => s.trim()).filter(s => s);
 
-            if(!title || targets.length === 0) return alert("단원명과 찾을 단어를 1개 이상 입력해주세요.");
+            if(!title || targets.length === 0) return showAlert("단원명과 찾을 단어를 1개 이상 입력해주세요.");
 
             const newUnit = {
                 title, 
-                targets, // 다중 정답 배열 저장
+                targets, 
                 createdAt: Date.now()
             };
 
@@ -427,21 +604,22 @@
                 document.getElementById('unit-target').value = '';
                 
                 await fetchUnits();
-                alert("단원이 성공적으로 추가되었습니다.");
+                showAlert("단원이 성공적으로 추가되었습니다.");
             } catch (e) {
-                alert("단원 저장에 실패했습니다: " + e.message);
+                showAlert("단원 저장에 실패했습니다: " + e.message);
             }
         }
 
         window.deleteUnit = async function(id) {
-            if(!confirm("정말 이 단원을 삭제하시겠습니까?")) return;
-            try {
-                const docRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'units', id);
-                await deleteDoc(docRef);
-                await fetchUnits();
-            } catch (e) {
-                alert("삭제 실패: " + e.message);
-            }
+            showConfirm("정말 이 단원을 삭제하시겠습니까?", async () => {
+                try {
+                    const docRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'units', id);
+                    await deleteDoc(docRef);
+                    await fetchUnits();
+                } catch (e) {
+                    showAlert("삭제 실패: " + e.message);
+                }
+            });
         }
 
         function renderUnits() {
@@ -452,9 +630,7 @@
             }
 
             container.innerHTML = state.units.map(unit => {
-                // 이전 데이터 호환성 (target 문자열이 있으면 배열처럼 표시)
                 const targetsList = unit.targets ? unit.targets.join(', ') : unit.target;
-                
                 return `
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center hover:shadow-md transition">
                     <div>
@@ -479,24 +655,58 @@
             filterSelect.innerHTML = '<option value="all">모든 단원</option>' + options;
         }
 
+        // ====== 교사 모드 (학생 기록 관리) ======
+        window.fetchTeacherScores = async function() {
+            await fetchScores(); // 상태 업데이트
+            const tbody = document.getElementById('teacher-score-list');
+            
+            if(state.scores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">기록된 점수가 없습니다.</td></tr>';
+                return;
+            }
+
+            // 최신 기록순 정렬
+            const sorted = [...state.scores].sort((a,b) => b.createdAt - a.createdAt);
+
+            tbody.innerHTML = sorted.map(s => `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                    <td class="p-4 text-slate-700">${s.unitTitle}</td>
+                    <td class="p-4 text-center text-slate-500">${s.grade}학년 ${s.classNum}반</td>
+                    <td class="p-4 font-bold">${s.name} <span class="text-xs font-normal text-slate-400 ml-1">(${s.stuNum}번)</span></td>
+                    <td class="p-4 text-right font-bold text-primary">${s.score}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteScoreRecord('${s.id}')" class="text-xs bg-red-100 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg font-bold transition">삭제</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        window.deleteScoreRecord = function(id) {
+            showConfirm("이 학생의 기록을 삭제하시겠습니까?\n(복구할 수 없습니다.)", async () => {
+                try {
+                    await deleteDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'scores', id));
+                    await window.fetchTeacherScores();
+                    showAlert("기록이 삭제되었습니다.");
+                } catch(e) {
+                    showAlert("삭제 실패: " + e.message);
+                }
+            });
+        }
+
+
         // ====== 오답 자동 생성 로직 ======
-        // 정답 단어를 기반으로 헷갈리는 오답을 무작위 생성합니다.
         function generateAutoDistractors(word, count) {
             const results = new Set();
-            
             let attempts = 0;
-            // 지정된 갯수(count)를 채울 때까지 섞기
             while (results.size < count && attempts < 100) {
                 attempts++;
                 let type = Math.floor(Math.random() * 4);
                 let newWord = word;
                 
                 if (type === 0 && word.length > 1) {
-                    // 1. 임의의 한 글자 삭제
                     let idx = Math.floor(Math.random() * word.length);
                     newWord = word.slice(0, idx) + word.slice(idx + 1);
                 } else if (type === 1 && word.length > 1) {
-                    // 2. 인접한 두 글자 위치 바꾸기
                     let idx = Math.floor(Math.random() * (word.length - 1));
                     let arr = word.split('');
                     let temp = arr[idx];
@@ -504,32 +714,26 @@
                     arr[idx+1] = temp;
                     newWord = arr.join('');
                 } else if (type === 2) {
-                    // 3. 한 글자 연속 복제하기
                     let idx = Math.floor(Math.random() * word.length);
                     newWord = word.slice(0, idx+1) + word[idx] + word.slice(idx+1);
                 } else if (type === 3) {
-                    // 4. 단어 내에 있는 다른 글자 무작위 삽입
                     let randomChar = word[Math.floor(Math.random() * word.length)];
                     let idx = Math.floor(Math.random() * (word.length + 1));
                     newWord = word.slice(0, idx) + randomChar + word.slice(idx);
                 }
                 
-                // 원본 단어와 다를 때만 오답 리스트에 추가
                 if (newWord !== word && newWord.length > 0) {
                     results.add(newWord);
                 }
             }
             
-            // 만약 단어가 너무 짧아서 패턴이 충분히 안나온 경우 숫자/기호등을 붙여 보충
             let fallbackIndex = 1;
             while(results.size < count) {
                 results.add(word + String(fallbackIndex));
                 fallbackIndex++;
             }
-            
             return Array.from(results);
         }
-
 
         // ====== 게임 로직 ======
         const colors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
@@ -541,13 +745,12 @@
             const stuNum = document.getElementById('student-num').value;
             const name = document.getElementById('student-name').value.trim();
 
-            if(!unitId) return alert("단원을 선택해주세요!");
-            if(!name) return alert("이름을 입력해주세요!");
+            if(!unitId) return showAlert("단원을 선택해주세요!");
+            if(!name) return showAlert("이름을 입력해주세요!");
 
             state.currentUnit = state.units.find(u => u.id === unitId);
             state.studentInfo = { grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
             
-            // 등록된 단어들 중 이번 게임에서 찾을 단어 하나를 무작위로 선택
             const targetsArray = state.currentUnit.targets || [state.currentUnit.target];
             state.currentTargetWord = targetsArray[Math.floor(Math.random() * targetsArray.length)];
             
@@ -562,20 +765,15 @@
             const canvas = document.getElementById('game-canvas');
             canvas.innerHTML = ''; 
             
-            // 정답 개수 무작위 4~8개 설정
             state.gameTargetCount = Math.floor(Math.random() * 5) + 4;
-            // 오답 개수 (정답 개수의 1.5배 ~ 2배)
             const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
 
-            // 타겟 단어를 바탕으로 오답 자동 생성 (10개 정도 넉넉히 생성 후 추출)
             const autoDistractors = generateAutoDistractors(state.currentTargetWord, 10);
 
             let words = [];
-            // 정답 넣기
             for(let i=0; i<state.gameTargetCount; i++) {
                 words.push({ text: state.currentTargetWord, isTarget: true });
             }
-            // 오답 넣기
             for(let i=0; i<distractorCount; i++) {
                 const randomDis = autoDistractors[Math.floor(Math.random() * autoDistractors.length)];
                 words.push({ text: randomDis, isTarget: false });
@@ -588,7 +786,7 @@
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                const topPercent = Math.random() * 70 + 15; // 상하 여백 확보
+                const topPercent = Math.random() * 65 + 10; 
                 const duration = Math.random() * 5 + 4; 
                 const delay = Math.random() * 4; 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
@@ -602,11 +800,14 @@
 
                 canvas.appendChild(el);
             });
+            
+            // 입력창 초기화
+            document.getElementById('game-answer').value = '';
         }
 
         window.submitAnswer = async function() {
             const answerInput = document.getElementById('game-answer').value;
-            if(answerInput === '') return alert("개수를 입력해주세요!");
+            if(answerInput === '') return showAlert("개수를 입력해주세요!");
             
             const answer = parseInt(answerInput);
             let score = 0;
@@ -638,7 +839,6 @@
 
             document.getElementById('result-score').innerText = score;
             
-            // 결과 화면 표시 전 점수 저장 수행
             await saveScore(score);
             navigate('result');
         }
@@ -673,7 +873,9 @@
                     state.scores.push({ id: doc.id, ...doc.data() });
                 });
                 
-                window.renderLeaderboard();
+                if (document.getElementById('screen-leaderboard').classList.contains('active')) {
+                    window.renderLeaderboard();
+                }
             } catch (e) {
                 console.error("점수 로드 실패:", e);
             }
