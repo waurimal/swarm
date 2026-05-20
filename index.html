@@ -38,25 +38,25 @@
         
         /* 단어 날아가는 애니메이션 키프레임 */
         @keyframes flyRight {
-            0% { left: -30%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
+            0% { left: -50%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { left: 130%; transform: scale(1.2) rotate(10deg); opacity: 0; }
+            100% { left: 150%; transform: scale(1.2) rotate(10deg); opacity: 0; }
         }
         @keyframes flyLeft {
-            0% { left: 130%; transform: scale(1.2) rotate(10deg); opacity: 0; }
+            0% { left: 150%; transform: scale(1.2) rotate(10deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { left: -30%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
+            100% { left: -50%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
         }
 
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            font-size: 10rem;
+            font-size: 20rem; /* 글씨 크기 대폭 확대 (20rem) */
             white-space: nowrap;
             user-select: none;
-            text-shadow: 4px 4px 0px white, -4px -4px 0px white, 4px -4px 0px white, -4px 4px 0px white;
+            text-shadow: 8px 8px 0px white, -8px -8px 0px white, 8px -8px 0px white, -8px 8px 0px white;
             opacity: 0;
             z-index: 10;
         }
@@ -275,14 +275,14 @@
                 <h2 class="text-4xl font-jua text-center text-primary mb-8">내 정보 입력</h2>
                 
                 <div class="space-y-6">
-                    <!-- 게임 모드 및 난이도 추가 -->
+                    <!-- 게임 모드 및 난이도 -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-bold mb-2 text-slate-600">게임 모드</label>
-                            <select id="student-mode" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold cursor-pointer hover:border-primary transition text-slate-700">
+                            <select id="student-mode" onchange="toggleMultiplayerOptions()" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold cursor-pointer hover:border-primary transition text-slate-700">
                                 <option value="1인용 게임">1인용 게임</option>
-                                <option value="1:1 게임">1:1 게임</option>
-                                <option value="팀 대결 게임">팀 대결 게임</option>
+                                <option value="1:1 게임">1:1 게임 (실시간 대결)</option>
+                                <option value="팀 대결 게임">팀 대결 게임 (청백 단체전)</option>
                             </select>
                         </div>
                         <div>
@@ -295,7 +295,21 @@
                         </div>
                     </div>
 
-                    <div>
+                    <!-- 멀티플레이어 옵션 패널 -->
+                    <div id="multiplayer-options-panel" class="hidden space-y-4 border-t border-slate-100 pt-4">
+                        <span class="block text-sm font-bold text-slate-600 mb-2">대결 옵션</span>
+                        <div class="flex gap-4">
+                            <button type="button" onclick="selectMultiAction('create')" id="btn-multi-create" class="flex-1 py-3 px-4 rounded-xl border-2 border-primary bg-primary text-white font-bold transition text-center">방 만들기</button>
+                            <button type="button" onclick="selectMultiAction('join')" id="btn-multi-join" class="flex-1 py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-700 font-bold bg-slate-50 transition text-center">방 참여하기</button>
+                        </div>
+                        <div id="join-room-code-wrapper" class="hidden">
+                            <label class="block text-sm font-bold mb-2 text-slate-600">입장 방 코드 (4자리 숫자)</label>
+                            <input type="text" id="join-room-code" placeholder="예: 1234" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-center font-bold text-lg bg-slate-50">
+                        </div>
+                    </div>
+
+                    <!-- 단원 선택 (방 참여 시에는 자동으로 방 정보 상속) -->
+                    <div id="student-unit-wrapper">
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
                         <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 cursor-pointer">
                             <option value="">단원을 선택해주세요</option>
@@ -336,12 +350,52 @@
                         <input type="text" id="student-name" placeholder="이름을 입력하세요" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 transition">
                     </div>
 
-                    <button onclick="prepareGame()" class="w-full py-5 mt-4 bg-primary text-white rounded-2xl font-jua text-3xl hover:bg-purple-500 transition shadow-lg transform hover:-translate-y-1">준비 완료!</button>
+                    <button onclick="handleStudentSubmit()" class="w-full py-5 mt-4 bg-primary text-white rounded-2xl font-jua text-3xl hover:bg-purple-500 transition shadow-lg transform hover:-translate-y-1">준비 완료!</button>
                 </div>
             </div>
         </div>
 
-        <!-- 5. 게임 화면 -->
+        <!-- 5. 멀티플레이어 대기실 (대기 및 방 공유) -->
+        <div id="screen-multiplayer-lobby" class="screen flex-col w-full max-w-2xl h-full justify-center">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 flex flex-col overflow-hidden border border-slate-100 max-h-[85vh]">
+                <div class="text-center border-b pb-6">
+                    <span class="bg-accent/10 text-accent px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider" id="lobby-mode-tag">대결 대기실</span>
+                    <h2 class="text-6xl font-jua text-slate-800 mt-4 mb-2 tracking-widest text-primary" id="lobby-room-code">0000</h2>
+                    <p class="text-sm text-slate-400 font-medium">칠판이나 다른 친구에게 방 코드를 공유하세요!</p>
+                </div>
+                
+                <div class="overflow-y-auto my-6 space-y-4 pr-2 flex-grow">
+                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+                        <div>
+                            <span class="text-xs text-slate-400 font-bold block">도전 단원</span>
+                            <h4 class="font-bold text-slate-700 text-base" id="lobby-unit-title">단원 정보</h4>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 font-bold block">난이도</span>
+                            <h4 class="font-bold text-primary" id="lobby-difficulty">보통</h4>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-jua text-slate-600 mb-2 flex justify-between">
+                            <span><i class="fas fa-users mr-2"></i>참가자 목록</span>
+                            <span class="text-sm"><span id="lobby-player-count">1</span>명 접속</span>
+                        </h4>
+                        <div id="lobby-player-list" class="space-y-3">
+                            <!-- JS 렌더링 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button onclick="leaveRoom()" class="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-jua text-2xl transition">방 나가기</button>
+                    <button id="lobby-start-btn" onclick="startMultiplayerGame()" class="flex-1 py-4 bg-primary hover:bg-purple-500 text-white rounded-xl font-jua text-2xl transition shadow-lg hidden">대결 시작하기</button>
+                    <div id="lobby-wait-msg" class="flex-1 py-4 bg-slate-50 text-slate-400 rounded-xl font-jua text-xl text-center flex items-center justify-center">방장이 대결을 시작하길 기다리는 중...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 게임 화면 -->
         <div id="screen-game" class="screen flex-col w-full h-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100">
             <!-- 상단 정보 -->
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
@@ -356,9 +410,23 @@
                     </div>
                 </div>
                 <!-- 게임 중 나가기 버튼 -->
-                <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => navigate('home'))" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
+                <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => leaveRoomLocal())" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
                     나가기 <i class="fas fa-sign-out-alt ml-1"></i>
                 </button>
+            </div>
+
+            <!-- 실시간 대결 순위 판넬 (멀티플레이어 전용) -->
+            <div id="game-live-standings" class="hidden absolute top-24 left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-slate-200/50 max-w-xs z-20 pointer-events-auto">
+                <h4 class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    실시간 순위
+                </h4>
+                <div id="game-live-list" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                    <!-- 실시간 랭킹 목록 -->
+                </div>
             </div>
 
             <!-- 단어가 날아다니는 캔버스 -->
@@ -366,19 +434,19 @@
                 <!-- 애니메이션 요소 추가 영역 -->
             </div>
 
-            <!-- 컴팩트한 하단 정답 입력창 -->
+            <!-- 컴팩트한 하단 정답 입력창 (녹색 테두리를 벗어나지 않도록 내부 정밀 조절) -->
             <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-sm px-4">
                 <div class="bg-white rounded-[24px] shadow-xl p-6 border-2 border-[#dcfd8b] flex flex-col items-center max-w-full">
                     <p class="text-slate-700 font-jua mb-3 text-xl text-center">정답 단어가 몇 개 지나갔나요?</p>
-                    <div class="flex gap-2 w-full">
-                        <input type="number" id="game-answer" class="flex-1 min-w-0 w-full p-3 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자" onkeypress="if(event.key === 'Enter') submitAnswer()">
+                    <div class="flex gap-2 w-full max-w-full">
+                        <input type="number" id="game-answer" class="flex-1 min-w-0 p-3 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자" onkeypress="if(event.key === 'Enter') submitAnswer()">
                         <button onclick="submitAnswer()" class="bg-[#ff823a] hover:bg-orange-600 text-white px-6 rounded-xl font-jua text-2xl transition whitespace-nowrap shadow-sm">확인</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 6. 단일 라운드 결과 화면 -->
+        <!-- 7. 단일 라운드 결과 화면 -->
         <div id="screen-result" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-12 flex flex-col items-center border border-slate-100 w-full">
                 <i id="result-icon" class="fas fa-check-circle text-8xl text-green-500 mb-6"></i>
@@ -396,9 +464,27 @@
             </div>
         </div>
 
-        <!-- 7. 최종 (종합) 결과 화면 -->
+        <!-- 8. 최종 (종합) 결과 화면 -->
         <div id="screen-final-result" class="screen flex-col items-center justify-center w-full max-w-3xl">
             <div class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center border border-slate-100 w-full">
+                
+                <!-- 대결 승리자 배너 (1:1 모드 전용) -->
+                <div id="final-multiplayer-winner" class="hidden w-full text-center py-4 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce">
+                    축하합니다! 홍길동 승리!
+                </div>
+
+                <!-- 팀 대결 청백전 스코어보드 (팀 모드 전용) -->
+                <div id="final-team-scoreboard" class="hidden w-full grid grid-cols-2 gap-4 mb-6 text-center">
+                    <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl">
+                        <span class="text-blue-600 font-bold text-lg">🔵 청팀 총점</span>
+                        <h4 id="final-blue-team-score" class="text-4xl font-jua text-blue-700 mt-1">0점</h4>
+                    </div>
+                    <div class="bg-red-50 border-2 border-red-200 p-4 rounded-2xl">
+                        <span class="text-red-600 font-bold text-lg">🔴 홍팀 총점</span>
+                        <h4 id="final-red-team-score" class="text-4xl font-jua text-red-700 mt-1">0점</h4>
+                    </div>
+                </div>
+
                 <h2 class="text-5xl font-jua text-primary mb-6">모든 문제 완료!</h2>
                 
                 <div class="bg-slate-50 w-full p-6 rounded-2xl mb-8 border border-slate-200 flex justify-between items-center text-center">
@@ -412,31 +498,55 @@
                     </div>
                 </div>
 
-                <div class="w-full overflow-auto max-h-64 mb-8 border border-slate-200 rounded-xl shadow-inner">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
-                            <tr>
-                                <th class="p-3 font-bold text-center">No.</th>
-                                <th class="p-3 font-bold">찾은 단어</th>
-                                <th class="p-3 font-bold text-center">실제 정답수</th>
-                                <th class="p-3 font-bold text-center">나의 입력</th>
-                                <th class="p-3 font-bold text-right text-primary">획득 점수</th>
-                            </tr>
-                        </thead>
-                        <tbody id="final-result-tbody" class="bg-white divide-y divide-slate-100">
-                            <!-- JS 렌더링 -->
-                        </tbody>
-                    </table>
+                <!-- 라운드 상세 결과 테이블 -->
+                <div class="w-full mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2 text-left w-full"><i class="fas fa-list-ol mr-2"></i>문제별 내 결과</h3>
+                    <div class="w-full overflow-auto max-h-48 border border-slate-200 rounded-xl shadow-inner">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 font-bold text-center">No.</th>
+                                    <th class="p-3 font-bold">찾은 단어</th>
+                                    <th class="p-3 font-bold text-center">실제 정답수</th>
+                                    <th class="p-3 font-bold text-center">나의 입력</th>
+                                    <th class="p-3 font-bold text-right text-primary">획득 점수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="final-result-tbody" class="bg-white divide-y divide-slate-100">
+                                <!-- JS 렌더링 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 실시간 방 최종 랭킹 결과보드 (멀티플레이어 전용) -->
+                <div id="final-multiplayer-leaderboard-section" class="hidden w-full mb-8">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2 text-left w-full"><i class="fas fa-trophy mr-2"></i>최종 대결 순위</h3>
+                    <div class="w-full overflow-auto max-h-48 border border-slate-200 rounded-xl shadow-inner">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-800 text-white sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 font-bold text-center">순위</th>
+                                    <th class="p-3 font-bold">학년 / 반</th>
+                                    <th class="p-3 font-bold">이름</th>
+                                    <th class="p-3 font-bold text-right text-secondary">최종 점수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="final-multiplayer-leaderboard-tbody" class="bg-white divide-y divide-slate-100">
+                                <!-- JS 렌더링 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="flex gap-4 w-full">
-                    <button onclick="navigate('leaderboard')" class="flex-1 py-4 bg-secondary text-slate-800 rounded-xl font-jua text-2xl hover:bg-[#c9f567] transition shadow-md">명예의 전당</button>
-                    <button onclick="navigate('home')" class="flex-1 py-4 bg-slate-200 text-slate-700 rounded-xl font-jua text-2xl hover:bg-slate-300 transition shadow-md">처음으로</button>
+                    <button onclick="leaveRoomAndToLeaderboard()" class="flex-1 py-4 bg-secondary text-slate-800 rounded-xl font-jua text-2xl hover:bg-[#c9f567] transition shadow-md">명예의 전당</button>
+                    <button onclick="leaveRoomAndToHome()" class="flex-1 py-4 bg-slate-200 text-slate-700 rounded-xl font-jua text-2xl hover:bg-slate-300 transition shadow-md">처음으로</button>
                 </div>
             </div>
         </div>
 
-        <!-- 8. 명예의 전당 -->
+        <!-- 9. 명예의 전당 -->
         <div id="screen-leaderboard" class="screen flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
@@ -487,7 +597,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global State
         const state = {
@@ -506,7 +616,13 @@
             currentTargetWord: '',
             gameTargetCount: 0,
             roundResults: [], // 각 라운드 결과 저장 배열
-            totalScore: 0
+            totalScore: 0,
+
+            // 멀티플레이어 매니징 상태
+            roomCode: null,
+            isHost: false,
+            multiAction: 'create', // create 또는 join
+            roomListenerUnsubscribe: null
         };
 
         // --- Custom Modals ---
@@ -539,7 +655,7 @@
             document.getElementById(`screen-${screenId}`).classList.add('active');
             
             const navBar = document.getElementById('main-nav');
-            if (screenId === 'home' || screenId === 'game' || screenId === 'teacher_login') {
+            if (screenId === 'home' || screenId === 'game' || screenId === 'teacher_login' || screenId === 'multiplayer-lobby') {
                 navBar.classList.add('hidden');
                 navBar.classList.remove('flex');
             } else {
@@ -882,9 +998,401 @@
             return Array.from(results);
         }
 
-        // ====== 게임 다중 라운드 로직 ======
-        const colors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
+        // ====== 1인용 / 멀티플레이어 라우터 제출 ======
+        window.handleStudentSubmit = function() {
+            const mode = document.getElementById('student-mode').value;
+            if (mode === '1인용 게임') {
+                prepareGame();
+            } else {
+                if (state.multiAction === 'create') {
+                    createRoom();
+                } else if (state.multiAction === 'join') {
+                    joinRoom();
+                } else {
+                    showAlert("방 만들기 또는 방 참여하기를 선택해주세요!");
+                }
+            }
+        }
 
+        // ====== 멀티플레이어 방 만들기 / 참여하기 토글 ======
+        window.toggleMultiplayerOptions = function() {
+            const mode = document.getElementById('student-mode').value;
+            const multiPanel = document.getElementById('multiplayer-options-panel');
+            const unitWrapper = document.getElementById('student-unit-wrapper');
+            
+            if (mode === '1인용 게임') {
+                multiPanel.classList.add('hidden');
+                unitWrapper.classList.remove('hidden');
+            } else {
+                multiPanel.classList.remove('hidden');
+                selectMultiAction('create'); // 기본적으로 방 만들기가 먼저 선택됨
+            }
+        }
+
+        window.selectMultiAction = function(action) {
+            state.multiAction = action;
+            const btnCreate = document.getElementById('btn-multi-create');
+            const btnJoin = document.getElementById('btn-multi-join');
+            const joinCodeWrapper = document.getElementById('join-room-code-wrapper');
+            const unitWrapper = document.getElementById('student-unit-wrapper');
+
+            if (action === 'create') {
+                btnCreate.className = "flex-1 py-3 px-4 rounded-xl border-2 border-primary bg-primary text-white font-bold transition text-center shadow-sm";
+                btnJoin.className = "flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold bg-slate-50 hover:bg-slate-100 transition text-center";
+                joinCodeWrapper.classList.add('hidden');
+                unitWrapper.classList.remove('hidden');
+            } else {
+                btnCreate.className = "flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold bg-slate-50 hover:bg-slate-100 transition text-center";
+                btnJoin.className = "flex-1 py-3 px-4 rounded-xl border-2 border-primary bg-primary text-white font-bold transition text-center shadow-sm";
+                joinCodeWrapper.classList.remove('hidden');
+                unitWrapper.classList.add('hidden'); // 방 참가 시에는 방장이 설정한 단원을 상속받음
+            }
+        }
+
+        // ====== 실시간 멀티플레이어 방 생성 (Host) ======
+        window.createRoom = async function() {
+            const mode = document.getElementById('student-mode').value;
+            const difficulty = document.getElementById('student-difficulty').value;
+            const unitId = document.getElementById('student-unit').value;
+            const grade = document.getElementById('student-grade').value;
+            const classNum = document.getElementById('student-class').value;
+            const stuNum = document.getElementById('student-num').value;
+            const name = document.getElementById('student-name').value.trim();
+
+            if(!unitId) return showAlert("대결할 단원을 선택해주세요!");
+            if(!name) return showAlert("이름을 입력해주세요!");
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            state.currentUnit = state.units.find(u => u.id === unitId);
+            state.studentInfo = { 
+                mode: mode,
+                difficulty: difficulty,
+                grade: Number(grade), 
+                classNum: Number(classNum), 
+                stuNum: Number(stuNum), 
+                name: name 
+            };
+
+            // 4자리 숫자 방 코드 생성
+            const roomCode = String(Math.floor(1000 + Math.random() * 9000));
+            state.roomCode = roomCode;
+            state.isHost = true;
+
+            // 방의 문제 단어들 무작위 셔플링 세팅
+            const targetsArray = state.currentUnit.targets || [state.currentUnit.target];
+            const gameWords = [...targetsArray].sort(() => Math.random() - 0.5);
+
+            const initialRoomDoc = {
+                roomCode,
+                mode,
+                difficulty,
+                unitId,
+                unitTitle: state.currentUnit.title,
+                status: 'waiting',
+                createdAt: Date.now(),
+                gameWords,
+                players: {
+                    [state.userId]: {
+                        uid: state.userId,
+                        name,
+                        grade: Number(grade),
+                        classNum: Number(classNum),
+                        stuNum: Number(stuNum),
+                        isHost: true,
+                        team: 'blue', // 단체전 시 청팀 디폴트
+                        score: 0
+                    }
+                }
+            };
+
+            try {
+                const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
+                await setDoc(roomRef, initialRoomDoc);
+
+                document.getElementById('loading-overlay').style.display = 'none';
+                listenToRoom(roomCode);
+                navigate('multiplayer-lobby');
+            } catch (e) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                showAlert("방 생성에 실패했습니다: " + e.message);
+            }
+        }
+
+        // ====== 실시간 멀티플레이어 방 참여 (Guest) ======
+        window.joinRoom = async function() {
+            const roomCode = document.getElementById('join-room-code').value.trim();
+            const grade = document.getElementById('student-grade').value;
+            const classNum = document.getElementById('student-class').value;
+            const stuNum = document.getElementById('student-num').value;
+            const name = document.getElementById('student-name').value.trim();
+
+            if(!roomCode) return showAlert("방 코드를 입력해주세요!");
+            if(!name) return showAlert("이름을 입력해주세요!");
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            try {
+                const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
+                const roomSnap = await getDoc(roomRef);
+
+                if(!roomSnap.exists()) {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    return showAlert("존재하지 않는 방 코드입니다.");
+                }
+
+                const roomData = roomSnap.data();
+                if(roomData.status !== 'waiting') {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    return showAlert("이미 게임이 시작되었거나 종료된 방입니다.");
+                }
+
+                state.roomCode = roomCode;
+                state.isHost = false;
+                state.currentUnit = state.units.find(u => u.id === roomData.unitId);
+                state.studentInfo = {
+                    mode: roomData.mode,
+                    difficulty: roomData.difficulty,
+                    grade: Number(grade),
+                    classNum: Number(classNum),
+                    stuNum: Number(stuNum),
+                    name: name
+                };
+
+                // 새로운 게스트 참가자 객체
+                const playerObj = {
+                    uid: state.userId,
+                    name,
+                    grade: Number(grade),
+                    classNum: Number(classNum),
+                    stuNum: Number(stuNum),
+                    isHost: false,
+                    team: 'red', // 단체전 밸런싱을 위해 디폴트 홍팀 설정
+                    score: 0
+                };
+
+                await updateDoc(roomRef, {
+                    [`players.${state.userId}`]: playerObj
+                });
+
+                document.getElementById('loading-overlay').style.display = 'none';
+                listenToRoom(roomCode);
+                navigate('multiplayer-lobby');
+            } catch(e) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                showAlert("방 참가 실패: " + e.message);
+            }
+        }
+
+        // ====== 실시간 방 이벤트 구독 ======
+        function listenToRoom(roomCode) {
+            cleanupRoomListener();
+
+            const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
+            state.roomListenerUnsubscribe = onSnapshot(roomRef, (snapshot) => {
+                if(!snapshot.exists()) {
+                    leaveRoomLocal();
+                    showAlert("대결 방이 폭파되었거나 존재하지 않습니다.");
+                    return;
+                }
+
+                const roomData = snapshot.data();
+                renderLobbyUI(roomData);
+                renderLiveStandings(roomData);
+
+                // 방장이 게임을 시작하여 playing 상태가 되었을 때 게임 화면으로 강제 전환
+                if (roomData.status === 'playing' && !document.getElementById('screen-game').classList.contains('active') && !document.getElementById('screen-result').classList.contains('active') && !document.getElementById('screen-final-result').classList.contains('active')) {
+                    state.gameWords = roomData.gameWords;
+                    state.currentRoundIndex = 0;
+                    state.roundResults = [];
+                    state.totalScore = 0;
+                    startRound();
+                }
+            }, (error) => {
+                console.error("실시간 동기화 오류:", error);
+            });
+        }
+
+        // ====== 대기실 로비 UI 렌더링 ======
+        function renderLobbyUI(room) {
+            document.getElementById('lobby-mode-tag').innerText = room.mode;
+            document.getElementById('lobby-room-code').innerText = room.roomCode;
+            document.getElementById('lobby-unit-title').innerText = room.unitTitle;
+            
+            let diffLabel = "보통";
+            if (room.difficulty === 'easy') diffLabel = "하";
+            else if (room.difficulty === 'hard') diffLabel = "상";
+            document.getElementById('lobby-difficulty').innerText = diffLabel;
+
+            const players = Object.values(room.players || {});
+            document.getElementById('lobby-player-count').innerText = players.length;
+
+            const listContainer = document.getElementById('lobby-player-list');
+            listContainer.innerHTML = players.map(p => {
+                const isMe = p.uid === state.userId;
+                const hostBadge = p.isHost ? `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold mr-2"><i class="fas fa-crown mr-1"></i>방장</span>` : '';
+                
+                let teamToggleBtn = '';
+                if (room.mode === '팀 대결 게임') {
+                    const teamColorClass = p.team === 'blue' ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white';
+                    const teamLabel = p.team === 'blue' ? '🔵 청팀' : '🔴 홍팀';
+                    
+                    if (isMe) {
+                        teamToggleBtn = `<button onclick="toggleMyTeam()" class="${teamColorClass} px-3 py-1 rounded-xl font-bold text-xs shadow-sm transition">${teamLabel}</button>`;
+                    } else {
+                        teamToggleBtn = `<span class="${p.team === 'blue' ? 'text-blue-500 bg-blue-50' : 'text-red-500 bg-red-50'} px-3 py-1 rounded-xl font-bold text-xs">${p.team === 'blue' ? '청팀' : '홍팀'}</span>`;
+                    }
+                }
+
+                return `
+                    <div class="flex justify-between items-center bg-white border border-slate-100 p-3.5 rounded-2xl shadow-sm ${isMe ? 'border-primary ring-2 ring-primary/10' : ''}">
+                        <div class="flex items-center">
+                            ${hostBadge}
+                            <span class="font-bold text-slate-700 text-base">${p.grade}학년 ${p.classNum}반 ${p.name} <span class="text-xs font-normal text-slate-400 font-mono">(${p.stuNum}번)</span></span>
+                        </div>
+                        <div>
+                            ${teamToggleBtn}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 대결 시작 제어권
+            const startBtn = document.getElementById('lobby-start-btn');
+            const waitMsg = document.getElementById('lobby-wait-msg');
+
+            if (state.isHost) {
+                startBtn.classList.remove('hidden');
+                waitMsg.classList.add('hidden');
+                
+                // 1:1 대결 시 최소 2인 이상일 때 활성화
+                if (room.mode === '1:1 게임' && players.length < 2) {
+                    startBtn.disabled = true;
+                    startBtn.innerText = "상대를 기다리는 중...";
+                    startBtn.className = "flex-1 py-4 bg-slate-300 text-slate-500 rounded-xl font-jua text-2xl cursor-not-allowed";
+                } else {
+                    startBtn.disabled = false;
+                    startBtn.innerText = "대결 시작하기";
+                    startBtn.className = "flex-1 py-4 bg-primary hover:bg-purple-500 text-white rounded-xl font-jua text-2xl transition shadow-lg cursor-pointer";
+                }
+            } else {
+                startBtn.classList.add('hidden');
+                waitMsg.classList.remove('hidden');
+            }
+        }
+
+        // ====== 실시간 청/홍팀 소속 토글 ======
+        window.toggleMyTeam = async function() {
+            if (!state.roomCode) return;
+            const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', state.roomCode);
+            try {
+                const roomSnap = await getDoc(roomRef);
+                if (roomSnap.exists()) {
+                    const roomData = roomSnap.data();
+                    const currentTeam = roomData.players[state.userId].team;
+                    const nextTeam = currentTeam === 'blue' ? 'red' : 'blue';
+                    await updateDoc(roomRef, {
+                        [`players.${state.userId}.team`]: nextTeam
+                    });
+                }
+            } catch(e) {
+                console.error("소속 팀 변경 중 오류:", e);
+            }
+        }
+
+        // ====== 방 나가기 및 삭제 ======
+        window.leaveRoom = async function() {
+            if(!state.roomCode) return;
+            
+            showConfirm("대기실에서 나가시겠습니까?", async () => {
+                document.getElementById('loading-overlay').style.display = 'flex';
+                const roomCode = state.roomCode;
+                const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
+
+                cleanupRoomListener();
+
+                try {
+                    if (state.isHost) {
+                        // 방장 퇴장 시 방 삭제
+                        await deleteDoc(roomRef);
+                    } else {
+                        // 일반 참가자 퇴장 시 플레이어 리스트에서 삭제
+                        const roomSnap = await getDoc(roomRef);
+                        if (roomSnap.exists()) {
+                            const roomData = roomSnap.data();
+                            delete roomData.players[state.userId];
+                            await setDoc(roomRef, roomData);
+                        }
+                    }
+                } catch(e) {
+                    console.error("퇴장 오류:", e);
+                } finally {
+                    state.roomCode = null;
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    navigate('home');
+                }
+            });
+        }
+
+        function leaveRoomLocal() {
+            cleanupRoomListener();
+            state.roomCode = null;
+            navigate('home');
+        }
+
+        function cleanupRoomListener() {
+            if (state.roomListenerUnsubscribe) {
+                state.roomListenerUnsubscribe();
+                state.roomListenerUnsubscribe = null;
+            }
+        }
+
+        // ====== 대결 게임방 시작 트리거 ======
+        window.startMultiplayerGame = async function() {
+            if (!state.roomCode) return;
+            const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', state.roomCode);
+            try {
+                await updateDoc(roomRef, {
+                    status: 'playing'
+                });
+            } catch(e) {
+                showAlert("대결 시작에 실패했습니다: " + e.message);
+            }
+        }
+
+        // ====== 실시간 경쟁 점수 판넬 업데이트 ======
+        function renderLiveStandings(roomData) {
+            const liveStandings = document.getElementById('game-live-standings');
+            if (!liveStandings) return;
+
+            if (roomData && roomData.status === 'playing') {
+                liveStandings.classList.remove('hidden');
+                const liveList = document.getElementById('game-live-list');
+                const playersList = Object.values(roomData.players || {});
+                
+                // 점수 내림차순 정렬
+                playersList.sort((a,b) => b.score - a.score);
+
+                liveList.innerHTML = playersList.map((p, idx) => {
+                    const isMe = p.uid === state.userId;
+                    let teamBadge = '';
+                    if (roomData.mode === '팀 대결 게임') {
+                        teamBadge = p.team === 'blue' ? '<span class="text-blue-500 mr-1">🔵</span>' : '<span class="text-red-500 mr-1">🔴</span>';
+                    }
+                    return `
+                        <div class="flex justify-between items-center gap-4 text-xs ${isMe ? 'font-bold text-primary' : 'text-slate-600'}">
+                            <span class="truncate flex items-center">${teamBadge}${idx+1}. ${p.name}</span>
+                            <span class="font-mono">${p.score}점</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                liveStandings.classList.add('hidden');
+            }
+        }
+
+
+        // ====== 게임 다중 라운드 로직 ======
         window.prepareGame = function() {
             const mode = document.getElementById('student-mode').value;
             const difficulty = document.getElementById('student-difficulty').value;
@@ -986,7 +1494,7 @@
             document.getElementById('game-answer').focus();
         }
 
-        window.submitAnswer = function() {
+        window.submitAnswer = async function() {
             const answerInput = document.getElementById('game-answer').value;
             if(answerInput === '') return showAlert("개수를 입력해주세요!");
             
@@ -1034,6 +1542,19 @@
                 score: score
             });
             state.totalScore += score;
+
+            // 실시간 대결 중일 경우, 다른 유저들과 공유하기 위해 Firestore에 내 실시간 합산 점수 및 라운드 결과 동기화
+            if (state.roomCode) {
+                const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', state.roomCode);
+                try {
+                    await updateDoc(roomRef, {
+                        [`players.${state.userId}.score`]: state.totalScore,
+                        [`players.${state.userId}.roundScores.${state.currentRoundIndex}`]: score
+                    });
+                } catch(e) {
+                    console.error("실시간 점수 동기화 실패:", e);
+                }
+            }
             
             // 다음 문제 또는 최종 결과 버튼 설정
             const btnContainer = document.getElementById('result-buttons');
@@ -1055,27 +1576,112 @@
             startRound();
         }
 
+        // ====== 최종 게임 결과 보여주기 ======
         window.showFinalResult = async function() {
-            // 학생 정보 및 총점 표시
+            // 내 정보 표기
             document.getElementById('final-student-info').innerText = `${state.studentInfo.grade}학년 ${state.studentInfo.classNum}반 ${state.studentInfo.name}`;
             document.getElementById('final-total-score').innerText = state.totalScore;
             
-            // 테이블 결과 세팅
+            // 내 종합 채점표 구성
             const tbody = document.getElementById('final-result-tbody');
             tbody.innerHTML = state.roundResults.map((r, i) => `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0 text-sm">
                     <td class="p-3 text-center text-slate-400 font-bold">${i + 1}</td>
-                    <td class="p-3 font-bold text-lg text-slate-700">${r.word}</td>
+                    <td class="p-3 font-bold text-base text-slate-700">${r.word}</td>
                     <td class="p-3 text-center text-green-600 font-bold text-lg">${r.targetCount}</td>
                     <td class="p-3 text-center ${r.targetCount === r.userAnswer ? 'text-green-600' : 'text-red-500'} font-bold text-lg">${r.userAnswer}</td>
                     <td class="p-3 text-right text-primary font-jua text-2xl">${r.score}</td>
                 </tr>
             `).join('');
 
-            // 모든 단원 종료 후 총점을 Firebase에 한 번만 저장
+            // 대결(멀티플레이어)인 경우 상대 전적 스코어보드 & 승패 유무 처리
+            const winBanner = document.getElementById('final-multiplayer-winner');
+            const teamScoreboard = document.getElementById('final-team-scoreboard');
+            const multiLeaderboardSec = document.getElementById('final-multiplayer-leaderboard-section');
+
+            if (state.roomCode) {
+                try {
+                    const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', state.roomCode);
+                    const roomSnap = await getDoc(roomRef);
+
+                    if (roomSnap.exists()) {
+                        const roomData = roomSnap.data();
+                        const players = Object.values(roomData.players || {});
+
+                        // 순위별 플레이어 정렬
+                        players.sort((a,b) => b.score - a.score);
+
+                        if (roomData.mode === '1:1 게임') {
+                            winBanner.classList.remove('hidden');
+                            teamScoreboard.classList.add('hidden');
+                            const winner = players[0];
+                            winBanner.innerText = `🏆 승리자: ${winner.name} (${winner.score}점)`;
+                        } else if (roomData.mode === '팀 대결 게임') {
+                            winBanner.classList.add('hidden');
+                            teamScoreboard.classList.remove('hidden');
+
+                            let blueTotal = 0;
+                            let redTotal = 0;
+                            players.forEach(p => {
+                                if (p.team === 'blue') blueTotal += p.score;
+                                else redTotal += p.score;
+                            });
+
+                            document.getElementById('final-blue-team-score').innerText = `${blueTotal}점`;
+                            document.getElementById('final-red-team-score').innerText = `${redTotal}점`;
+
+                            // 승리 팀 판정 팝업 배너
+                            winBanner.classList.remove('hidden');
+                            if (blueTotal > redTotal) {
+                                winBanner.innerText = "🏆 청팀 승리! 🔵";
+                                winBanner.className = "w-full text-center py-4 bg-blue-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce";
+                            } else if (redTotal > blueTotal) {
+                                winBanner.innerText = "🏆 홍팀 승리! 🔴";
+                                winBanner.className = "w-full text-center py-4 bg-red-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce";
+                            } else {
+                                winBanner.innerText = "무승부! 모두 잘했습니다! 🤝";
+                                winBanner.className = "w-full text-center py-4 bg-slate-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md";
+                            }
+                        }
+
+                        // 방 내 전체 랭킹 테이블 구성
+                        multiLeaderboardSec.classList.remove('hidden');
+                        const multiLtbody = document.getElementById('final-multiplayer-leaderboard-tbody');
+                        multiLtbody.innerHTML = players.map((p, idx) => `
+                            <tr class="hover:bg-slate-50 text-sm">
+                                <td class="p-3 text-center font-bold text-slate-500">${idx+1}</td>
+                                <td class="p-3 text-center text-slate-500">${p.grade}학년 ${p.classNum}반</td>
+                                <td class="p-3 font-bold">${p.name} <span class="text-xs font-normal text-slate-400">(${p.team === 'blue' ? '청팀' : '홍팀'})</span></td>
+                                <td class="p-3 text-right font-jua text-xl text-primary">${p.score}점</td>
+                            </tr>
+                        `).join('');
+                    }
+                } catch(e) {
+                    console.error("최종 멀티플레이 결과 정보 취득 오류:", e);
+                }
+            } else {
+                winBanner.classList.add('hidden');
+                teamScoreboard.classList.add('hidden');
+                multiLeaderboardSec.classList.add('hidden');
+            }
+
+            // 내 단독 합산 점수를 데이터베이스에 최종 저장
             await saveScore(state.totalScore);
             
             navigate('final-result');
+        }
+
+        // ====== 최종 스크린을 나갈 때의 리스너 및 룸 소멸 클린업 ======
+        window.leaveRoomAndToLeaderboard = function() {
+            cleanupRoomListener();
+            state.roomCode = null;
+            navigate('leaderboard');
+        }
+
+        window.leaveRoomAndToHome = function() {
+            cleanupRoomListener();
+            state.roomCode = null;
+            navigate('home');
         }
 
         // ====== 학생 점수 DB 저장 ======
