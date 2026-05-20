@@ -36,27 +36,32 @@
         .screen { display: none !important; }
         .screen.active { display: flex !important; }
         
-        /* 단어 날아가는 애니메이션 키프레임 */
+        /* 단어 날아가는 애니메이션 키프레임 (화면 밖에서 시작해서 완전 밖으로 나가도록 설정) */
         @keyframes flyRight {
-            0% { left: -50%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
+            0% { left: -50%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { left: 150%; transform: scale(1.2) rotate(10deg); opacity: 0; }
+            100% { left: 150%; transform: scale(1.1) rotate(8deg); opacity: 0; }
         }
         @keyframes flyLeft {
-            0% { left: 150%; transform: scale(1.2) rotate(10deg); opacity: 0; }
+            0% { left: 150%; transform: scale(1.1) rotate(8deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { left: -50%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
+            100% { left: -50%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
         }
 
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            font-size: 20rem; /* 글씨 크기 대폭 확대 (20rem) */
+            font-size: 12rem; /* 박진감 넘치고 시원시원한 대왕 글씨 크기 */
             white-space: nowrap;
             user-select: none;
-            text-shadow: 8px 8px 0px white, -8px -8px 0px white, 8px -8px 0px white, -8px 8px 0px white;
+            /* 어떤 배경색 위에서도 잘 보이도록 매우 두꺼운 흰색 테두리 아웃라인 추가 */
+            text-shadow: 
+                6px 6px 0px #fff, -6px -6px 0px #fff, 
+                6px -6px 0px #fff, -6px 6px 0px #fff,
+                0px 6px 0px #fff, 0px -6px 0px #fff,
+                6px 0px 0px #fff, -6px 0px 0px #fff;
             opacity: 0;
             z-index: 10;
         }
@@ -308,7 +313,7 @@
                         </div>
                     </div>
 
-                    <!-- 단원 선택 (방 참여 시에는 자동으로 방 정보 상속) -->
+                    <!-- 단원 선택 -->
                     <div id="student-unit-wrapper">
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
                         <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 cursor-pointer">
@@ -409,7 +414,7 @@
                         진행: <span id="game-progress" class="text-primary font-jua text-2xl ml-1">1 / 5</span>
                     </div>
                 </div>
-                <!-- 게임 중 나가기 버튼 -->
+                <!-- 게임 중 나가기 버튼 (window.leaveRoomLocal 로 명확하게 전역 바인딩 연결) -->
                 <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => leaveRoomLocal())" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
                     나가기 <i class="fas fa-sign-out-alt ml-1"></i>
                 </button>
@@ -434,13 +439,14 @@
                 <!-- 애니메이션 요소 추가 영역 -->
             </div>
 
-            <!-- 컴팩트한 하단 정답 입력창 (녹색 테두리를 벗어나지 않도록 내부 정밀 조절) -->
-            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-sm px-4">
-                <div class="bg-white rounded-[24px] shadow-xl p-6 border-2 border-[#dcfd8b] flex flex-col items-center max-w-full">
-                    <p class="text-slate-700 font-jua mb-3 text-xl text-center">정답 단어가 몇 개 지나갔나요?</p>
-                    <div class="flex gap-2 w-full max-w-full">
-                        <input type="number" id="game-answer" class="flex-1 min-w-0 p-3 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자" onkeypress="if(event.key === 'Enter') submitAnswer()">
-                        <button onclick="submitAnswer()" class="bg-[#ff823a] hover:bg-orange-600 text-white px-6 rounded-xl font-jua text-2xl transition whitespace-nowrap shadow-sm">확인</button>
+            <!-- 컴팩트한 하단 정답 입력창 (녹색 테두리를 완벽히 정렬하여 삐져나오지 않도록 개선) -->
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
+                <div class="bg-white rounded-[28px] shadow-2xl p-6 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
+                    <p class="text-slate-700 font-jua mb-4 text-xl text-center">정답은 몇 개?</p>
+                    <div class="flex gap-2 w-full justify-center">
+                        <!-- 높이 h-12로 정적 고정하고, flex를 사용해 삐져나가지 않도록 완벽 가공 -->
+                        <input type="number" id="game-answer" class="w-24 h-12 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자" onkeypress="if(event.key === 'Enter') submitAnswer()">
+                        <button onclick="submitAnswer()" class="bg-[#ff823a] hover:bg-orange-600 text-white h-12 px-5 rounded-xl font-jua text-xl transition whitespace-nowrap shadow-md">확인</button>
                     </div>
                 </div>
             </div>
@@ -459,7 +465,7 @@
                 </div>
 
                 <div id="result-buttons" class="flex gap-4 w-full">
-                    <!-- JS 렌더링 (다음 문제 또는 최종 결과 보기) -->
+                    <!-- JS 렌더링 -->
                 </div>
             </div>
         </div>
@@ -957,8 +963,12 @@
         }
 
 
-        // ====== 오답 자동 생성 로직 ======
+        // ====== 오답 자동 생성 로직 (Safeguard 보강) ======
         function generateAutoDistractors(word, count) {
+            // 예기치 않게 단어가 유실되어 들어오는 상황 방어
+            if (!word || typeof word !== 'string') {
+                word = "단어";
+            }
             const results = new Set();
             let attempts = 0;
             while (results.size < count && attempts < 100) {
@@ -1191,7 +1201,7 @@
             const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
             state.roomListenerUnsubscribe = onSnapshot(roomRef, (snapshot) => {
                 if(!snapshot.exists()) {
-                    leaveRoomLocal();
+                    window.leaveRoomLocal();
                     showAlert("대결 방이 폭파되었거나 존재하지 않습니다.");
                     return;
                 }
@@ -1334,7 +1344,8 @@
             });
         }
 
-        function leaveRoomLocal() {
+        // onclick 및 전역 이벤트에서 모듈 바인딩 우회용 글로벌 함수 바인딩 (Bug 2 완벽 해결)
+        window.leaveRoomLocal = function() {
             cleanupRoomListener();
             state.roomCode = null;
             navigate('home');
@@ -1416,7 +1427,10 @@
             };
             
             // 단원의 모든 단어를 무작위로 섞어서 게임 문제 목록으로 설정
-            const targetsArray = state.currentUnit.targets || [state.currentUnit.target];
+            const targetsArray = (state.currentUnit.targets && state.currentUnit.targets.length > 0) 
+                ? state.currentUnit.targets 
+                : (state.currentUnit.target ? [state.currentUnit.target] : ["단어"]);
+                
             state.gameWords = [...targetsArray].sort(() => Math.random() - 0.5);
             
             // 다중 라운드용 상태 초기화
@@ -1430,6 +1444,11 @@
         function startRound() {
             state.currentTargetWord = state.gameWords[state.currentRoundIndex];
             
+            // 혹시 모를 오동작 방지 예외 처리
+            if (!state.currentTargetWord) {
+                state.currentTargetWord = "단어";
+            }
+            
             document.getElementById('game-target-word').innerText = state.currentTargetWord;
             document.getElementById('game-progress').innerText = `${state.currentRoundIndex + 1} / ${state.gameWords.length}`;
             document.getElementById('game-answer').value = '';
@@ -1442,11 +1461,18 @@
             const canvas = document.getElementById('game-canvas');
             canvas.innerHTML = ''; 
             
+            // 예외 방지: 단어가 비어있을 경우 기본 단어로 강제 변환
+            if (!state.currentTargetWord) {
+                state.currentTargetWord = "단어";
+            }
+
             // 난이도에 따른 세팅
             let minTarget, maxTarget, minDur, addDur, maxDelay;
-            if (state.studentInfo.difficulty === 'easy') {
+            const diff = (state.studentInfo && state.studentInfo.difficulty) ? state.studentInfo.difficulty : 'normal';
+
+            if (diff === 'easy') {
                 minTarget = 3; maxTarget = 6; minDur = 6; addDur = 4; maxDelay = 4; // 느리고 적음
-            } else if (state.studentInfo.difficulty === 'hard') {
+            } else if (diff === 'hard') {
                 minTarget = 6; maxTarget = 10; minDur = 2; addDur = 2.5; maxDelay = 2; // 빠르고 많음
             } else {
                 minTarget = 4; maxTarget = 8; minDur = 4; addDur = 4; maxDelay = 3; // 중간
@@ -1455,6 +1481,7 @@
             state.gameTargetCount = Math.floor(Math.random() * (maxTarget - minTarget + 1)) + minTarget;
             const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
 
+            // 오답 생성 로직 호출
             const autoDistractors = generateAutoDistractors(state.currentTargetWord, 10);
 
             let words = [];
@@ -1473,7 +1500,7 @@
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                // 수정사항: 입력칸(하단 30%)에 겹치지 않도록 높이를 상단 10% ~ 60% 영역으로 제한
+                // 입력칸(하단 30%)에 겹치지 않도록 스폰 높이를 상단 10% ~ 60% 영역으로 단단히 제한
                 const topPercent = Math.random() * 50 + 10; 
                 // 난이도별 속도/지연 적용
                 const duration = Math.random() * addDur + minDur; 
@@ -1506,6 +1533,7 @@
             const descEl = document.getElementById('result-desc');
             const iconEl = document.getElementById('result-icon');
 
+            // 점수 차등 지급 시스템 기획 구현 (Bug 2 연동 해결)
             if(diff === 0) {
                 score = 100;
                 titleEl.innerText = "정답입니다!";
@@ -1579,6 +1607,7 @@
         // ====== 최종 게임 결과 보여주기 ======
         window.showFinalResult = async function() {
             // 내 정보 표기
+            const studentMode = (state.studentInfo && state.studentInfo.mode) ? state.studentInfo.mode : '1인용 게임';
             document.getElementById('final-student-info').innerText = `${state.studentInfo.grade}학년 ${state.studentInfo.classNum}반 ${state.studentInfo.name}`;
             document.getElementById('final-total-score').innerText = state.totalScore;
             
@@ -1688,11 +1717,14 @@
         async function saveScore(totalScore) {
             try {
                 const scoresRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores');
+                const diff = (state.studentInfo && state.studentInfo.difficulty) ? state.studentInfo.difficulty : 'normal';
+                const mode = (state.studentInfo && state.studentInfo.mode) ? state.studentInfo.mode : '1인용 게임';
+                
                 await addDoc(scoresRef, {
                     unitId: state.currentUnit.id,
                     unitTitle: state.currentUnit.title,
-                    mode: state.studentInfo.mode,
-                    difficulty: state.studentInfo.difficulty,
+                    mode: mode,
+                    difficulty: diff,
                     grade: state.studentInfo.grade,
                     classNum: state.studentInfo.classNum,
                     stuNum: state.studentInfo.stuNum,
