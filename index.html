@@ -36,7 +36,7 @@
         .screen { display: none !important; }
         .screen.active { display: flex !important; }
         
-        /* 단어 날아가는 애니메이션 키프레임 (안정적인 % 단위 사용으로 어떤 화면에서도 붕괴 방지) */
+        /* 단어 날아가는 애니메이션 키프레임 */
         @keyframes flyRight {
             0% { left: -50%; transform: scale(0.9) translateY(10px) rotate(-5deg); opacity: 0; }
             10% { opacity: 1; }
@@ -53,8 +53,8 @@
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            /* 모바일, PC 모두 대응하는 꽉 차는 대왕 사이즈 */
-            font-size: clamp(5rem, 15vw, 15rem); 
+            /* 폰트 크기를 기기에 맞게 조절하되 너무 거대해져서 입력칸을 덮지 않도록 최적화 */
+            font-size: clamp(4rem, 10vw, 12rem); 
             white-space: nowrap;
             user-select: none;
             /* 시인성 극대화: 두꺼운 흰색 테두리와 부드러운 그림자 */
@@ -79,12 +79,14 @@
 </head>
 <body class="h-screen flex flex-col font-sans text-slate-800">
 
+    <!-- 글로벌 로딩 오버레이 -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
         <i class="fas fa-spinner fa-spin text-6xl text-primary mb-6"></i>
         <p class="text-2xl font-jua text-slate-600">앱을 준비하고 있습니다...</p>
         <p class="text-sm font-bold text-slate-400 mt-2">잠시만 기다려주세요</p>
     </div>
 
+    <!-- 커스텀 알림(Alert) 모달 -->
     <div id="modal-alert" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
         <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl mx-4 transform transition-all">
             <i class="fas fa-info-circle text-4xl text-primary mb-4"></i>
@@ -93,6 +95,7 @@
         </div>
     </div>
 
+    <!-- 커스텀 확인(Confirm) 모달 -->
     <div id="modal-confirm" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
         <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl mx-4 transform transition-all">
             <i class="fas fa-question-circle text-4xl text-accent mb-4"></i>
@@ -104,6 +107,7 @@
         </div>
     </div>
 
+    <!-- 동적 네비게이션 바 -->
     <nav id="main-nav" class="hidden bg-white shadow-sm p-4 px-6 justify-between items-center z-10 shrink-0">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
             <i class="fas fa-bug text-primary text-3xl"></i>
@@ -114,8 +118,10 @@
         </button>
     </nav>
 
+    <!-- 메인 컨테이너 -->
     <main class="flex-1 min-h-0 w-full relative p-4 flex flex-col items-center justify-center">
         
+        <!-- 1. 심플한 홈 화면 -->
         <div id="screen-home" class="screen active flex-1 flex-col items-center justify-center w-full max-w-5xl text-center h-full">
             <div id="home-school-title" class="bg-primary text-white px-8 py-2 rounded-full font-jua text-3xl mb-8 shadow-md inline-block">학교 정보 로딩중...</div>
             <i class="fas fa-search text-7xl text-primary mb-6 animate-bounce"></i>
@@ -148,12 +154,14 @@
                 </button>
             </div>
 
+            <!-- 하단 카피라이트 -->
             <div class="mt-16 text-slate-400 text-sm font-medium">
                 <p>만든이: 곽현석(이의초등학교)</p>
                 <p>Copyright &copy; 2026 Eui Elementary School. All Rights Reserved.</p>
             </div>
         </div>
 
+        <!-- 2. 교사 모드 로그인 -->
         <div id="screen-teacher_login" class="screen flex-1 flex-col items-center justify-center w-full max-w-sm h-full">
             <div class="bg-white rounded-3xl shadow-2xl p-10 w-full text-center border border-slate-100">
                 <i class="fas fa-lock text-6xl text-slate-600 mb-6"></i>
@@ -165,6 +173,7 @@
             </div>
         </div>
 
+        <!-- 3. 교사 모드 대시보드 화면 -->
         <div id="screen-teacher" class="screen flex-1 flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col overflow-hidden relative">
                 
@@ -174,8 +183,9 @@
                     <button onclick="switchTeacherTab('settings')" id="tab-btn-settings" class="text-xl font-jua text-slate-400 border-b-4 border-transparent px-4 py-2 mb-[-2px] hover:text-slate-600 transition">환경 설정</button>
                 </div>
                 
-                <div id="teacher-tab-units" class="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow overflow-hidden h-full">
-                    <div class="col-span-1 bg-slate-50 p-6 rounded-2xl border border-slate-200 overflow-y-auto">
+                <!-- 단원 관리: min-h-0 추가하여 스크롤 붕괴 방지 -->
+                <div id="teacher-tab-units" class="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow overflow-hidden h-full min-h-0">
+                    <div class="col-span-1 bg-slate-50 p-6 rounded-2xl border border-slate-200 overflow-y-auto min-h-0">
                         <h3 class="text-xl font-bold mb-5 text-slate-700">새 단원 추가</h3>
                         <div class="space-y-5">
                             <div>
@@ -185,19 +195,21 @@
                             <div>
                                 <label class="block text-sm font-bold mb-2 text-accent">찾을 단어들 (정답)</label>
                                 <textarea id="unit-target" rows="4" class="w-full p-3 rounded-lg border-2 border-slate-200 focus:border-accent outline-none" placeholder="예: apple, banana, cat (쉼표로 구분해서 여러 개 입력 가능)"></textarea>
-                                <p class="text-xs text-slate-400 mt-2 font-medium">※ 오답(함정) 단어는 시스템이 헷갈리도록 자동으로 생성해 줍니다.</p>
+                                <p class="text-xs text-slate-400 mt-2 font-medium">※ 오답(함정) 단어는 시스템이 자동으로 생성합니다.</p>
                             </div>
                             <button onclick="saveUnit()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition text-lg shadow-md"><i class="fas fa-plus mr-2"></i>단원 추가하기</button>
                         </div>
                     </div>
-                    <div class="col-span-2 flex flex-col h-full">
-                        <div class="overflow-y-auto flex-grow pr-2 space-y-3" id="unit-list">
+                    <div class="col-span-2 flex flex-col h-full min-h-0">
+                        <!-- overflow-y-auto가 정상 작동하도록 flex-grow 및 min-h-0 유지 -->
+                        <div class="overflow-y-auto flex-grow pr-2 space-y-3 min-h-0" id="unit-list">
                             <div class="text-center text-slate-400 py-10 font-medium">등록된 단원이 없습니다. 좌측에서 추가해주세요.</div>
                         </div>
                     </div>
                 </div>
 
-                <div id="teacher-tab-scores" class="hidden flex-col flex-grow overflow-hidden h-full">
+                <!-- 학생 기록 관리: min-h-0 추가하여 스크롤 붕괴 방지 -->
+                <div id="teacher-tab-scores" class="hidden flex-col flex-grow overflow-hidden h-full min-h-0">
                     <div class="flex flex-col gap-4 mb-4">
                         <div class="flex justify-between items-center">
                             <h3 class="text-xl font-bold text-slate-700">학생 플레이 기록</h3>
@@ -224,7 +236,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner">
+                    <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner min-h-0">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
                                 <tr>
@@ -236,7 +248,8 @@
                                 </tr>
                             </thead>
                             <tbody id="teacher-score-list" class="bg-white divide-y divide-slate-100 text-sm">
-                                </tbody>
+                                <!-- JS 렌더링 -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -259,6 +272,7 @@
             </div>
         </div>
 
+        <!-- 4. 학생 설정 화면 -->
         <div id="screen-student_setup" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-10 w-full border border-slate-100">
                 <h2 class="text-4xl font-jua text-center text-primary mb-8">내 정보 입력</h2>
@@ -299,7 +313,7 @@
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
                         <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 cursor-pointer">
                             <option value="">단원을 선택해주세요</option>
-                            </select>
+                        </select>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4">
@@ -335,6 +349,7 @@
             </div>
         </div>
 
+        <!-- 5. 멀티플레이어 대기실 -->
         <div id="screen-multiplayer-lobby" class="screen flex-1 flex-col w-full max-w-2xl h-full justify-center">
             <div class="bg-white rounded-3xl shadow-2xl p-8 flex flex-col overflow-hidden border border-slate-100 max-h-[85vh]">
                 <div class="text-center border-b pb-6">
@@ -361,7 +376,8 @@
                             <span class="text-sm"><span id="lobby-player-count">1</span>명 접속</span>
                         </h4>
                         <div id="lobby-player-list" class="space-y-3">
-                            </div>
+                            <!-- JS 렌더링 -->
+                        </div>
                     </div>
                 </div>
                 
@@ -373,6 +389,7 @@
             </div>
         </div>
 
+        <!-- 6. 게임 화면 -->
         <div id="screen-game" class="screen flex-1 flex-col w-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100 min-h-[450px]">
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
@@ -401,9 +418,12 @@
                 <div id="game-live-list" class="space-y-2 max-h-32 overflow-y-auto pr-1"></div>
             </div>
 
+            <!-- 단어 애니메이션 영역 -->
             <div id="game-canvas" class="absolute inset-0 z-0 overflow-hidden">
-                </div>
+                <!-- 애니메이션 단어 추가 영역 -->
+            </div>
 
+            <!-- 컴팩트한 하단 정답 입력창 -->
             <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
                 <div class="bg-white rounded-[28px] shadow-2xl p-4 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
                     <p class="text-slate-700 font-jua mb-2 text-lg text-center">정답은 몇 개?</p>
@@ -415,6 +435,7 @@
             </div>
         </div>
 
+        <!-- 7. 단일 라운드 결과 화면 -->
         <div id="screen-result" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-12 flex flex-col items-center border border-slate-100 w-full">
                 <i id="result-icon" class="fas fa-check-circle text-8xl text-green-500 mb-6"></i>
@@ -427,10 +448,12 @@
                 </div>
 
                 <div id="result-buttons" class="flex gap-4 w-full">
-                    </div>
+                    <!-- JS 렌더링 -->
+                </div>
             </div>
         </div>
 
+        <!-- 8. 최종 (종합) 결과 화면 -->
         <div id="screen-final-result" class="screen flex-col items-center justify-center w-full max-w-3xl">
             <div class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center border border-slate-100 w-full">
                 
@@ -464,7 +487,7 @@
 
                 <div class="w-full mb-6">
                     <h3 class="text-lg font-bold text-slate-700 mb-2 text-left w-full"><i class="fas fa-list-ol mr-2"></i>문제별 내 결과</h3>
-                    <div class="w-full overflow-auto max-h-48 border border-slate-200 rounded-xl shadow-inner">
+                    <div class="w-full overflow-auto max-h-48 border border-slate-200 rounded-xl shadow-inner min-h-0">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
                                 <tr>
@@ -482,7 +505,7 @@
 
                 <div id="final-multiplayer-leaderboard-section" class="hidden w-full mb-8">
                     <h3 class="text-lg font-bold text-slate-700 mb-2 text-left w-full"><i class="fas fa-trophy mr-2"></i>최종 대결 순위</h3>
-                    <div class="w-full overflow-auto max-h-48 border border-slate-200 rounded-xl shadow-inner">
+                    <div class="w-full overflow-auto max-h-48 border border-slate-200 rounded-xl shadow-inner min-h-0">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-800 text-white sticky top-0 z-10">
                                 <tr>
@@ -504,6 +527,7 @@
             </div>
         </div>
 
+        <!-- 9. 명예의 전당 -->
         <div id="screen-leaderboard" class="screen flex-1 flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
@@ -528,7 +552,7 @@
                     </div>
                 </div>
 
-                <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner">
+                <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner min-h-0">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-800 text-white sticky top-0 z-10">
                             <tr>
@@ -547,6 +571,7 @@
 
     </main>
 
+    <!-- Firebase & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -1300,8 +1325,8 @@
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                // 수정사항: 입력칸(하단)에 겹치지 않도록 스폰 높이를 상단 5% ~ 35% 영역으로 제한 (여백 확보)
-                const topPercent = Math.random() * 30 + 5; 
+                // 단어 오버랩(침범) 방지 수정: 화면 상단의 5% ~ 25% 구간 내에서만 스폰되도록 엄격히 고정
+                const topPercent = Math.random() * 20 + 5; 
                 const duration = Math.random() * addDur + minDur; 
                 const delay = (index * 0.4) + (Math.random() * 0.3);
                 
@@ -1417,6 +1442,7 @@
                 winBanner.classList.add('hidden'); teamScoreboard.classList.add('hidden'); multiLeaderboardSec.classList.add('hidden');
             }
 
+            // 모든 결과가 화면에 적용된 뒤, 최후에 데이터베이스에 점수 저장 실행
             await saveScore(state.totalScore);
             navigate('final-result');
         }
@@ -1424,16 +1450,25 @@
         window.leaveRoomAndToLeaderboard = function() { cleanupRoomListener(); state.roomCode = null; navigate('leaderboard'); }
         window.leaveRoomAndToHome = function() { cleanupRoomListener(); state.roomCode = null; navigate('home'); }
 
+        // ====== 명예의 전당 점수 누락 에러 해결 (Fix 2) ======
         async function saveScore(totalScore) {
             try {
+                // 단원 ID가 undefined로 누락되어 DB 저장이 실패하는 것을 방지하기 위해 기본값('unknown') 강제 추가
                 await addDoc(collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores'), {
-                    unitId: state.currentUnit.id, unitTitle: state.currentUnit.title,
-                    mode: state.studentInfo?.mode || '1인용 게임', difficulty: state.studentInfo?.difficulty || 'normal',
-                    grade: state.studentInfo.grade, classNum: state.studentInfo.classNum,
-                    stuNum: state.studentInfo.stuNum, name: state.studentInfo.name,
-                    score: totalScore, createdAt: Date.now()
+                    unitId: state.currentUnit?.id || 'unknown', 
+                    unitTitle: state.currentUnit?.title || '기본 단원',
+                    mode: state.studentInfo?.mode || '1인용 게임', 
+                    difficulty: state.studentInfo?.difficulty || 'normal',
+                    grade: state.studentInfo?.grade || 1, 
+                    classNum: state.studentInfo?.classNum || 1,
+                    stuNum: state.studentInfo?.stuNum || 1, 
+                    name: state.studentInfo?.name || '학생',
+                    score: totalScore || 0, 
+                    createdAt: Date.now()
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.error("점수 저장 실패:", e);
+            }
         }
 
         async function fetchScores() {
