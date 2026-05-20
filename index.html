@@ -53,8 +53,8 @@
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            /* 폰트 크기를 기기에 맞게 조절하되 너무 거대해져서 입력칸을 덮지 않도록 최적화 */
-            font-size: clamp(4rem, 10vw, 12rem); 
+            /* 폰트 크기 겹침 방지를 위해 적절히 축소 */
+            font-size: clamp(4rem, 8vw, 9rem); 
             white-space: nowrap;
             user-select: none;
             /* 시인성 극대화: 두꺼운 흰색 테두리와 부드러운 그림자 */
@@ -201,7 +201,6 @@
                         </div>
                     </div>
                     <div class="col-span-2 flex flex-col h-full min-h-0">
-                        <!-- overflow-y-auto가 정상 작동하도록 flex-grow 및 min-h-0 유지 -->
                         <div class="overflow-y-auto flex-grow pr-2 space-y-3 min-h-0" id="unit-list">
                             <div class="text-center text-slate-400 py-10 font-medium">등록된 단원이 없습니다. 좌측에서 추가해주세요.</div>
                         </div>
@@ -215,19 +214,18 @@
                             <h3 class="text-xl font-bold text-slate-700">학생 플레이 기록</h3>
                             <div class="flex gap-2">
                                 <button onclick="deleteFilteredScores()" class="text-sm bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-lg font-bold transition shadow-sm"><i class="fas fa-trash-alt mr-2"></i>필터 결과 삭제</button>
-                                <button onclick="fetchTeacherScores()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold transition shadow-sm"><i class="fas fa-sync-alt mr-2"></i>새로고침</button>
                             </div>
                         </div>
                         <div class="flex gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                            <select id="filter-score-unit" onchange="renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
+                            <select id="filter-score-unit" onchange="window.renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
                                 <option value="all">모든 단원</option>
                             </select>
-                            <select id="filter-score-grade" onchange="renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
+                            <select id="filter-score-grade" onchange="window.renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
                                 <option value="all">전체 학년</option>
                                 <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
                                 <option value="4">4학년</option><option value="5">5학년</option><option value="6">6학년</option>
                             </select>
-                            <select id="filter-score-class" onchange="renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
+                            <select id="filter-score-class" onchange="window.renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
                                 <option value="all">전체 반</option>
                                 <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
                                 <option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option>
@@ -389,7 +387,7 @@
             </div>
         </div>
 
-        <!-- 6. 게임 화면 -->
+        <!-- 6. 게임 화면 (절대 좌표 캔버스로 높이 붕괴 완전 차단) -->
         <div id="screen-game" class="screen flex-1 flex-col w-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100 min-h-[450px]">
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
@@ -534,15 +532,15 @@
                     <h2 class="text-4xl font-jua text-amber-500"><i class="fas fa-trophy mr-3"></i>명예의 전당</h2>
                     
                     <div class="flex gap-3">
-                        <select id="filter-unit" onchange="renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                        <select id="filter-unit" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">모든 단원</option>
                         </select>
-                        <select id="filter-grade" onchange="renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                        <select id="filter-grade" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">전체 학년</option>
                             <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
                             <option value="4">4학년</option><option value="5">5학년</option><option value="6">6학년</option>
                         </select>
-                        <select id="filter-class" onchange="renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                        <select id="filter-class" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">전체 반</option>
                             <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
                             <option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option>
@@ -595,7 +593,8 @@
             roomCode: null,
             isHost: false,
             multiAction: 'create',
-            roomListenerUnsubscribe: null
+            roomListenerUnsubscribe: null,
+            scoresUnsubscribe: null // 명예의 전당 실시간 동기화를 위한 리스너
         };
 
         // 배경음악(효과음) 재생 함수
@@ -663,7 +662,7 @@
                 navBar.classList.add('flex');
             }
             
-            if(screenId === 'leaderboard') fetchScores();
+            if(screenId === 'leaderboard') window.renderLeaderboard();
             if(screenId === 'home') document.getElementById('teacher-pwd-input').value = '';
         };
 
@@ -709,6 +708,7 @@
                             state.userId = user.uid;
                             await fetchConfig(); 
                             await fetchUnits();
+                            listenToScoresRealtime(); // 명예의 전당 실시간 동기화 시작
                         }
                     } catch (err) {
                         console.error("인증 실패, 로컬 기본 모드 진행:", err);
@@ -789,7 +789,7 @@
             document.getElementById(`teacher-tab-${tabName}`).classList.add('flex');
             document.getElementById(`tab-btn-${tabName}`).className = "text-xl font-jua text-primary border-b-4 border-primary px-4 py-2 mb-[-2px] transition";
             
-            if(tabName === 'scores') fetchTeacherScores();
+            if(tabName === 'scores') window.renderTeacherScores();
         }
 
         async function fetchUnits() {
@@ -808,6 +808,18 @@
                 
                 renderUnits();
                 renderUnitOptions();
+                
+                // 단원이 로드된 후 필터 옵션 업데이트
+                const unitSelectScores = document.getElementById('filter-score-unit');
+                const currentUnitValue = unitSelectScores.value;
+                unitSelectScores.innerHTML = '<option value="all">모든 단원</option>' + state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
+                if ([...unitSelectScores.options].some(opt => opt.value === currentUnitValue)) {
+                    unitSelectScores.value = currentUnitValue;
+                }
+                
+                const unitSelectLeaderboard = document.getElementById('filter-unit');
+                unitSelectLeaderboard.innerHTML = '<option value="all">모든 단원</option>' + state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
+                
             } catch (e) {
                 loadMockUnits();
                 renderUnits();
@@ -880,21 +892,30 @@
 
         function renderUnitOptions() {
             const studentSelect = document.getElementById('student-unit');
-            const filterSelect = document.getElementById('filter-unit');
             const options = state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
             studentSelect.innerHTML = '<option value="">단원을 선택해주세요</option>' + options;
-            filterSelect.innerHTML = '<option value="all">모든 단원</option>' + options;
         }
 
-        window.fetchTeacherScores = async function() {
-            await fetchScores();
-            const unitSelect = document.getElementById('filter-score-unit');
-            const currentUnitValue = unitSelect.value;
-            unitSelect.innerHTML = '<option value="all">모든 단원</option>' + state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
-            if ([...unitSelect.options].some(opt => opt.value === currentUnitValue)) {
-                unitSelect.value = currentUnitValue;
-            }
-            window.renderTeacherScores();
+        // 명예의 전당 점수 실시간 동기화 (버그 2 갱신 문제 해결)
+        function listenToScoresRealtime() {
+            if (!state.db) return;
+            if (state.scoresUnsubscribe) return;
+
+            const scoresRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores');
+            state.scoresUnsubscribe = onSnapshot(scoresRef, (snapshot) => {
+                state.scores = [];
+                snapshot.forEach(doc => { state.scores.push({ id: doc.id, ...doc.data() }); });
+                
+                // 보이는 탭이 리더보드이거나 교사 점수일 때 즉시 다시 그려주기
+                if (document.getElementById('screen-leaderboard').classList.contains('active')) {
+                    window.renderLeaderboard();
+                }
+                if (document.getElementById('screen-teacher').classList.contains('active') && !document.getElementById('teacher-tab-scores').classList.contains('hidden')) {
+                    window.renderTeacherScores();
+                }
+            }, (error) => {
+                console.error("점수 실시간 동기화 오류:", error);
+            });
         }
 
         window.renderTeacherScores = function() {
@@ -943,7 +964,6 @@
                 try {
                     const deletePromises = filtered.map(s => deleteDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'scores', s.id)));
                     await Promise.all(deletePromises);
-                    await window.fetchTeacherScores();
                     showAlert(`기록 삭제가 완료되었습니다.`);
                 } catch(e) {
                     showAlert("삭제 오류 발생.");
@@ -957,7 +977,6 @@
             showConfirm("기록을 삭제하시겠습니까?", async () => {
                 try {
                     await deleteDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'scores', id));
-                    await window.fetchTeacherScores();
                 } catch(e) {}
             });
         }
@@ -1054,7 +1073,7 @@
             document.getElementById('loading-overlay').style.display = 'flex';
 
             state.currentUnit = state.units.find(u => u.id === unitId);
-            if (!state.currentUnit) state.currentUnit = { title: "기본 단원", targets: ["단어"] };
+            if (!state.currentUnit) state.currentUnit = { id: 'unknown', title: "기본 단원", targets: ["단어"] };
 
             state.studentInfo = { mode, difficulty, grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
             const roomCode = String(Math.floor(1000 + Math.random() * 9000));
@@ -1115,7 +1134,7 @@
 
                 state.roomCode = roomCode;
                 state.isHost = false;
-                state.currentUnit = state.units.find(u => u.id === roomData.unitId) || { title: roomData.unitTitle, targets: roomData.gameWords };
+                state.currentUnit = state.units.find(u => u.id === roomData.unitId) || { id: 'unknown', title: roomData.unitTitle, targets: roomData.gameWords };
                 state.studentInfo = { mode: roomData.mode, difficulty: roomData.difficulty, grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
 
                 await updateDoc(roomRef, {
@@ -1274,7 +1293,7 @@
             if(!unitId) return showAlert("단원을 선택해주세요!");
             if(!name) return showAlert("이름을 입력해주세요!");
 
-            state.currentUnit = state.units.find(u => u.id === unitId) || { title: "기본 단원", targets: ["단어"] };
+            state.currentUnit = state.units.find(u => u.id === unitId) || { id: 'unknown', title: "기본 단원", targets: ["단어"] };
             state.studentInfo = { mode, difficulty, grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
             
             const targetsArray = (state.currentUnit.targets && Array.isArray(state.currentUnit.targets) && state.currentUnit.targets.length > 0) ? state.currentUnit.targets : ["단어"];
@@ -1304,9 +1323,10 @@
             const textColors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
             
             const diff = state.studentInfo?.difficulty || 'normal';
-            let minTarget = 4, maxTarget = 8, minDur = 4, addDur = 4, maxDelay = 3;
-            if (diff === 'easy') { minTarget = 3; maxTarget = 6; minDur = 6; }
-            else if (diff === 'hard') { minTarget = 6; maxTarget = 10; minDur = 2; addDur = 2.5; maxDelay = 2; }
+            // 난이도별 속도 늦춤 및 간격 벌림 조정
+            let minTarget = 4, maxTarget = 8, minDur = 7, addDur = 5, spawnInterval = 1.5;
+            if (diff === 'easy') { minTarget = 3; maxTarget = 6; minDur = 9; addDur = 6; spawnInterval = 2.0; }
+            else if (diff === 'hard') { minTarget = 6; maxTarget = 10; minDur = 5; addDur = 4; spawnInterval = 1.0; }
 
             state.gameTargetCount = Math.floor(Math.random() * (maxTarget - minTarget + 1)) + minTarget;
             const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
@@ -1317,18 +1337,30 @@
             for(let i=0; i<distractorCount; i++) words.push({ text: autoDistractors[Math.floor(Math.random() * autoDistractors.length)], isTarget: false });
             words.sort(() => Math.random() - 0.5);
             
-            // 효과음 재생
             playBGM();
+
+            // 겹침 방지를 위한 4개 차선(Lane) 시스템: 5%, 15%, 25%, 35% 영역 (하단을 침범하지 않음)
+            const lanes = [5, 15, 25, 35];
+            let lastLane = -1;
 
             words.forEach((wordObj, index) => {
                 const el = document.createElement('div');
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                // 단어 오버랩(침범) 방지 수정: 화면 상단의 5% ~ 25% 구간 내에서만 스폰되도록 엄격히 고정
-                const topPercent = Math.random() * 20 + 5; 
+                // 차선 결정 (바로 이전 단어와 같은 높이에서 나오는 것을 방지)
+                let laneIdx;
+                do {
+                    laneIdx = Math.floor(Math.random() * lanes.length);
+                } while (laneIdx === lastLane && lanes.length > 1);
+                lastLane = laneIdx;
+
+                // 차선에서 위아래로 약간만 흔들어 자연스러움 연출
+                const topPercent = lanes[laneIdx] + (Math.random() * 6 - 3); 
                 const duration = Math.random() * addDur + minDur; 
-                const delay = (index * 0.4) + (Math.random() * 0.3);
+                
+                // 겹치지 않게 대기 시간을 길게 벌림 (스폰 간격 * index)
+                const delay = (index * spawnInterval) + (Math.random() * (spawnInterval * 0.3));
                 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
                 const color = textColors[Math.floor(Math.random() * textColors.length)];
@@ -1442,7 +1474,7 @@
                 winBanner.classList.add('hidden'); teamScoreboard.classList.add('hidden'); multiLeaderboardSec.classList.add('hidden');
             }
 
-            // 모든 결과가 화면에 적용된 뒤, 최후에 데이터베이스에 점수 저장 실행
+            // DB에 점수 저장 (이후 리더보드는 onSnapshot으로 인해 자동 갱신됨)
             await saveScore(state.totalScore);
             navigate('final-result');
         }
@@ -1450,35 +1482,26 @@
         window.leaveRoomAndToLeaderboard = function() { cleanupRoomListener(); state.roomCode = null; navigate('leaderboard'); }
         window.leaveRoomAndToHome = function() { cleanupRoomListener(); state.roomCode = null; navigate('home'); }
 
-        // ====== 명예의 전당 점수 누락 에러 해결 (Fix 2) ======
+        // ====== 명예의 전당 점수 저장 보강 (Fix 2) ======
         async function saveScore(totalScore) {
             try {
-                // 단원 ID가 undefined로 누락되어 DB 저장이 실패하는 것을 방지하기 위해 기본값('unknown') 강제 추가
-                await addDoc(collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores'), {
-                    unitId: state.currentUnit?.id || 'unknown', 
-                    unitTitle: state.currentUnit?.title || '기본 단원',
-                    mode: state.studentInfo?.mode || '1인용 게임', 
-                    difficulty: state.studentInfo?.difficulty || 'normal',
-                    grade: state.studentInfo?.grade || 1, 
-                    classNum: state.studentInfo?.classNum || 1,
-                    stuNum: state.studentInfo?.stuNum || 1, 
-                    name: state.studentInfo?.name || '학생',
-                    score: totalScore || 0, 
+                // undefined 방지를 위해 속성들을 엄격히 구성 (Firestore는 undefined 속성 삽입시 저장 실패함)
+                const docData = {
+                    unitId: (state.currentUnit && state.currentUnit.id) ? state.currentUnit.id : 'unknown',
+                    unitTitle: (state.currentUnit && state.currentUnit.title) ? state.currentUnit.title : '기본 단원',
+                    mode: (state.studentInfo && state.studentInfo.mode) ? state.studentInfo.mode : '1인용 게임',
+                    difficulty: (state.studentInfo && state.studentInfo.difficulty) ? state.studentInfo.difficulty : 'normal',
+                    grade: (state.studentInfo && state.studentInfo.grade) ? state.studentInfo.grade : 1,
+                    classNum: (state.studentInfo && state.studentInfo.classNum) ? state.studentInfo.classNum : 1,
+                    stuNum: (state.studentInfo && state.studentInfo.stuNum) ? state.studentInfo.stuNum : 1,
+                    name: (state.studentInfo && state.studentInfo.name) ? state.studentInfo.name : '학생',
+                    score: typeof totalScore === 'number' ? totalScore : 0,
                     createdAt: Date.now()
-                });
+                };
+                await addDoc(collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores'), docData);
             } catch(e) {
                 console.error("점수 저장 실패:", e);
             }
-        }
-
-        async function fetchScores() {
-            if (!state.db) return;
-            try {
-                const snapshot = await getDocs(collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores'));
-                state.scores = [];
-                snapshot.forEach(doc => state.scores.push({ id: doc.id, ...doc.data() }));
-                if (document.getElementById('screen-leaderboard').classList.contains('active')) window.renderLeaderboard();
-            } catch (e) {}
         }
 
         window.renderLeaderboard = function() {
@@ -1504,7 +1527,7 @@
 
                 return `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                    <td class="p-5 text-center font-jua text-xl text-slate-500">${rankTrophy}</td>
+                    <td class="p-5 text-center font-jua text-xl text-slate-500">${r}</td>
                     <td class="p-5 font-bold text-slate-700 text-lg">${s.unitTitle}</td>
                     <td class="p-5 text-center text-slate-500 font-medium">${s.grade}학년 ${s.classNum}반</td>
                     <td class="p-5 font-bold text-lg">${s.name} <span class="text-sm font-normal text-slate-400 ml-1">(${s.mode || '1인용 게임'})</span></td>
