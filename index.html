@@ -36,18 +36,18 @@
         .screen { display: none !important; }
         .screen.active { display: flex !important; }
         
-        /* 단어 날아가는 애니메이션 키프레임 (화면 밖에서 시작해서 완전 밖으로 나가도록 설정) */
+        /* 단어 날아가는 애니메이션 키프레임 (시작/끝 범위를 콤팩트하게 잡아 대기 시간을 없애고 시인성 극대화) */
         @keyframes flyRight {
-            0% { left: -100%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { left: 150%; transform: scale(1.1) rotate(8deg); opacity: 0; }
+            0% { left: -30%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
+            15% { opacity: 1; }
+            85% { opacity: 1; }
+            100% { left: 115%; transform: scale(1.1) rotate(8deg); opacity: 0; }
         }
         @keyframes flyLeft {
-            0% { left: 150%; transform: scale(1.1) rotate(8deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { left: -100%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
+            0% { left: 115%; transform: scale(1.1) rotate(8deg); opacity: 0; }
+            15% { opacity: 1; }
+            85% { opacity: 1; }
+            100% { left: -30%; transform: scale(0.9) rotate(-8deg); opacity: 0; }
         }
 
         .flying-word {
@@ -311,7 +311,7 @@
                         </div>
                         <div id="join-room-code-wrapper" class="hidden">
                             <label class="block text-sm font-bold mb-2 text-slate-600">입장 방 코드 (4자리 숫자)</label>
-                            <input type="text" id="join-room-code" placeholder="예: 1234" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-center font-bold text-lg bg-slate-50">
+                            <input type="text" id="join-room-code" placeholder="예: 1234" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center font-bold text-lg bg-slate-50 outline-none focus:border-primary">
                         </div>
                     </div>
 
@@ -416,7 +416,7 @@
                         진행: <span id="game-progress" class="text-primary font-jua text-2xl ml-1">1 / 5</span>
                     </div>
                 </div>
-                <!-- 게임 중 나가기 버튼 (window.leaveRoomLocal 로 명확하게 전역 바인딩 연결) -->
+                <!-- 게임 중 나가기 버튼 -->
                 <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => leaveRoomLocal())" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
                     나가기 <i class="fas fa-sign-out-alt ml-1"></i>
                 </button>
@@ -436,9 +436,9 @@
                 </div>
             </div>
 
-            <!-- 단어가 날아다니는 캔버스 -->
-            <div id="game-canvas" class="flex-grow w-full h-full relative z-0">
-                <!-- 애니메이션 요소 추가 영역 -->
+            <!-- 수정한 부분: 절대 배치 캔버스 구조로 레이아웃 높이 붕괴 원천 차단 (Bug 1 완벽 해결) -->
+            <div id="game-canvas" class="absolute inset-0 z-0">
+                <!-- 애니메이션 단어 추가 영역 -->
             </div>
 
             <!-- 컴팩트한 하단 정답 입력창 (녹색 테두리를 완벽히 정렬하여 삐져나오지 않도록 개선) -->
@@ -1648,7 +1648,7 @@
 
             if (state.roomCode) {
                 try {
-                    const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', state.roomCode);
+                    const roomRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'rooms', roomCode);
                     const roomSnap = await getDoc(roomRef);
 
                     if (roomSnap.exists()) {
