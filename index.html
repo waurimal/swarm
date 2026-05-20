@@ -26,13 +26,15 @@
     </script>
     <style>
         body {
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
         }
-        .screen { display: none; }
-        .screen.active { display: block; }
+        
+        /* 화면 전환 처리 */
+        .screen { display: none !important; }
+        .screen.active { display: flex !important; }
         
         /* 단어 날아가는 애니메이션 키프레임 */
         @keyframes flyRight {
@@ -55,7 +57,7 @@
             white-space: nowrap;
             user-select: none;
             text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
-            opacity: 0; /* 초기엔 숨김 */
+            opacity: 0;
         }
 
         /* 커스텀 스크롤바 */
@@ -68,77 +70,95 @@
 <body class="h-screen flex flex-col font-sans text-slate-800">
 
     <!-- 글로벌 로딩 오버레이 -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-50 flex flex-col items-center justify-center">
+    <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center">
         <i class="fas fa-spinner fa-spin text-5xl text-primary mb-4"></i>
         <p class="text-xl font-jua text-slate-600">서버 연결 중...</p>
     </div>
 
-    <!-- 네비게이션 바 -->
-    <nav class="bg-white shadow-sm p-4 px-6 flex justify-between items-center z-10">
+    <!-- 동적 네비게이션 바 (초기 및 게임 화면에선 숨김) -->
+    <nav id="main-nav" class="hidden bg-white shadow-sm p-4 px-6 justify-between items-center z-10 shrink-0">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
             <i class="fas fa-bug text-primary text-3xl"></i>
             <h1 class="text-2xl font-jua text-primary tracking-wide pt-1">Counting Words</h1>
         </div>
-        <div class="flex gap-2">
-            <button onclick="navigate('home')" class="px-4 py-2 rounded-lg hover:bg-slate-100 font-medium transition"><i class="fas fa-home mr-1"></i> 홈</button>
-            <button onclick="navigate('teacher')" class="px-4 py-2 rounded-lg hover:bg-slate-100 font-medium text-slate-600 transition"><i class="fas fa-chalkboard-teacher mr-1"></i> 교사 모드</button>
-            <button onclick="navigate('leaderboard')" class="px-4 py-2 rounded-lg hover:bg-slate-100 font-medium text-amber-600 transition"><i class="fas fa-trophy mr-1"></i> 명예의 전당</button>
-        </div>
+        <button onclick="navigate('home')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition flex items-center">
+            <i class="fas fa-home mr-2"></i> 처음으로
+        </button>
     </nav>
 
     <!-- 메인 컨테이너 -->
-    <main class="flex-grow relative overflow-hidden flex justify-center items-center p-4">
+    <main class="flex-grow relative overflow-hidden p-4 flex flex-col items-center justify-center">
         
-        <!-- 1. 홈 화면 -->
-        <div id="screen-home" class="screen active w-full max-w-4xl text-center">
-            <h2 class="text-5xl font-jua text-slate-800 mb-6">숨은 단어를 찾아라!</h2>
-            <p class="text-lg text-slate-500 mb-10">좌우에서 날아오는 단어들 중 <span class="text-accent font-bold">정답 단어</span>가 몇 개인지 세어보세요.</p>
+        <!-- 1. 심플한 홈 화면 -->
+        <div id="screen-home" class="screen active flex-col items-center justify-center w-full max-w-5xl text-center h-full">
+            <i class="fas fa-search text-7xl text-primary mb-6 animate-bounce"></i>
+            <h1 class="text-7xl font-jua text-slate-800 mb-4 tracking-wider">Counting Words</h1>
+            <p class="text-xl text-slate-500 mb-16 font-medium">좌우에서 날아오는 단어들 중 <span class="text-accent font-bold">정답 단어</span>의 개수를 찾아보세요!</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                <button onclick="navigate('student_setup')" class="bg-primary hover:bg-purple-500 text-white p-8 rounded-3xl shadow-lg transform transition hover:-translate-y-2 flex flex-col items-center">
-                    <i class="fas fa-gamepad text-6xl mb-4"></i>
-                    <span class="text-2xl font-jua">게임 시작하기 (학생)</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full px-4">
+                
+                <!-- 학생 게임 시작 버튼 -->
+                <button onclick="navigate('student_setup')" class="group bg-white border-4 border-primary hover:bg-primary p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
+                    <div class="w-28 h-28 bg-purple-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
+                        <i class="fas fa-gamepad text-6xl text-primary group-hover:text-primary"></i>
+                    </div>
+                    <span class="text-3xl font-jua text-slate-800 group-hover:text-white transition duration-300">게임 시작</span>
+                    <p class="text-slate-500 group-hover:text-purple-100 mt-3 font-bold transition duration-300">학생용 입장</p>
                 </button>
-                <button onclick="navigate('leaderboard')" class="bg-secondary hover:bg-[#c9f567] text-slate-800 p-8 rounded-3xl shadow-lg transform transition hover:-translate-y-2 flex flex-col items-center">
-                    <i class="fas fa-crown text-6xl mb-4 text-amber-500"></i>
-                    <span class="text-2xl font-jua">명예의 전당</span>
+
+                <!-- 명예의 전당 버튼 -->
+                <button onclick="navigate('leaderboard')" class="group bg-white border-4 border-secondary hover:bg-secondary p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
+                    <div class="w-28 h-28 bg-[#eafdc4] group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
+                        <i class="fas fa-trophy text-6xl text-amber-500"></i>
+                    </div>
+                    <span class="text-3xl font-jua text-slate-800 transition duration-300">명예의 전당</span>
+                    <p class="text-slate-500 mt-3 font-bold transition duration-300 text-slate-600">전체 순위 확인하기</p>
+                </button>
+
+                <!-- 교사 모드 버튼 -->
+                <button onclick="navigate('teacher')" class="group bg-white border-4 border-slate-300 hover:bg-slate-700 hover:border-slate-700 p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
+                    <div class="w-28 h-28 bg-slate-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
+                        <i class="fas fa-chalkboard-teacher text-6xl text-slate-600"></i>
+                    </div>
+                    <span class="text-3xl font-jua text-slate-800 group-hover:text-white transition duration-300">교사 모드</span>
+                    <p class="text-slate-500 group-hover:text-slate-300 mt-3 font-bold transition duration-300">단원 및 단어 설정</p>
                 </button>
             </div>
         </div>
 
         <!-- 2. 교사 모드 화면 -->
-        <div id="screen-teacher" class="screen w-full max-w-5xl h-full flex flex-col">
-            <div class="bg-white rounded-2xl shadow-sm p-6 flex-grow flex flex-col mb-4 overflow-hidden">
+        <div id="screen-teacher" class="screen flex-col w-full max-w-5xl h-full">
+            <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col overflow-hidden">
                 <h2 class="text-3xl font-jua text-primary mb-6 border-b pb-4"><i class="fas fa-cog mr-2"></i>단원 및 단어 설정 (교사 전용)</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow overflow-hidden">
                     <!-- 입력 폼 -->
-                    <div class="col-span-1 bg-slate-50 p-5 rounded-xl border border-slate-200 overflow-y-auto">
-                        <h3 class="text-xl font-bold mb-4 text-slate-700">새 단원 추가</h3>
-                        <div class="space-y-4">
+                    <div class="col-span-1 bg-slate-50 p-6 rounded-2xl border border-slate-200 overflow-y-auto">
+                        <h3 class="text-xl font-bold mb-5 text-slate-700">새 단원 추가</h3>
+                        <div class="space-y-5">
                             <div>
-                                <label class="block text-sm font-bold mb-1 text-slate-600">단원명 (예: 1단원. 과일)</label>
-                                <input type="text" id="unit-title" class="w-full p-3 rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" placeholder="단원명을 입력하세요">
+                                <label class="block text-sm font-bold mb-2 text-slate-600">단원명 (예: 1단원. 과일)</label>
+                                <input type="text" id="unit-title" class="w-full p-3 rounded-lg border-2 border-slate-200 focus:border-primary outline-none" placeholder="단원명을 입력하세요">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold mb-1 text-accent">찾을 단어 (정답)</label>
-                                <input type="text" id="unit-target" class="w-full p-3 rounded-lg border border-slate-300 focus:border-accent outline-none" placeholder="예: apple">
+                                <label class="block text-sm font-bold mb-2 text-accent">찾을 단어 (정답)</label>
+                                <input type="text" id="unit-target" class="w-full p-3 rounded-lg border-2 border-slate-200 focus:border-accent outline-none" placeholder="예: apple">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold mb-1 text-slate-600">오답 단어 (쉼표로 구분)</label>
-                                <textarea id="unit-distractors" rows="3" class="w-full p-3 rounded-lg border border-slate-300 outline-none" placeholder="예: aple, appel, banana"></textarea>
-                                <p class="text-xs text-slate-400 mt-1">비슷하게 생긴 단어를 넣으면 더 재미있습니다.</p>
+                                <label class="block text-sm font-bold mb-2 text-slate-600">오답 단어 (쉼표로 구분)</label>
+                                <textarea id="unit-distractors" rows="4" class="w-full p-3 rounded-lg border-2 border-slate-200 outline-none focus:border-primary" placeholder="예: aple, appel, banana"></textarea>
+                                <p class="text-xs text-slate-400 mt-2 font-medium">비슷하게 생긴 단어를 넣으면 더 재미있습니다.</p>
                             </div>
-                            <button onclick="saveUnit()" class="w-full py-3 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition">단원 저장하기</button>
+                            <button onclick="saveUnit()" class="w-full py-4 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition text-lg shadow-md">저장하기</button>
                         </div>
                     </div>
                     
                     <!-- 리스트 뷰 -->
                     <div class="col-span-2 flex flex-col h-full">
-                        <h3 class="text-xl font-bold mb-4 text-slate-700">등록된 단원 목록</h3>
+                        <h3 class="text-xl font-bold mb-5 text-slate-700">등록된 단원 목록</h3>
                         <div class="overflow-y-auto flex-grow pr-2 space-y-3" id="unit-list">
-                            <!-- JS로 렌더링 됨 -->
-                            <div class="text-center text-slate-400 py-10">등록된 단원이 없습니다.</div>
+                            <!-- JS 렌더링 -->
+                            <div class="text-center text-slate-400 py-10 font-medium">등록된 단원이 없습니다. 좌측에서 추가해주세요.</div>
                         </div>
                     </div>
                 </div>
@@ -146,114 +166,111 @@
         </div>
 
         <!-- 3. 학생 설정 화면 -->
-        <div id="screen-student_setup" class="screen w-full max-w-lg">
-            <div class="bg-white rounded-3xl shadow-xl p-8">
-                <h2 class="text-3xl font-jua text-center text-slate-800 mb-8">내 정보 입력</h2>
+        <div id="screen-student_setup" class="screen flex-col items-center justify-center w-full max-w-lg">
+            <div class="bg-white rounded-3xl shadow-2xl p-10 w-full border border-slate-100">
+                <h2 class="text-4xl font-jua text-center text-primary mb-8">내 정보 입력</h2>
                 
-                <div class="space-y-5">
+                <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
-                        <select id="student-unit" class="w-full p-3 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg">
+                        <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700">
                             <option value="">단원을 선택해주세요</option>
                             <!-- JS 렌더링 -->
                         </select>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-bold mb-2 text-slate-600">학년</label>
-                            <input type="number" id="student-grade" min="1" max="6" value="1" class="w-full p-3 rounded-xl border-2 border-slate-200 text-center outline-none">
+                            <input type="number" id="student-grade" min="1" max="6" value="1" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold">
                         </div>
                         <div>
                             <label class="block text-sm font-bold mb-2 text-slate-600">반</label>
-                            <input type="number" id="student-class" min="1" value="1" class="w-full p-3 rounded-xl border-2 border-slate-200 text-center outline-none">
+                            <input type="number" id="student-class" min="1" value="1" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold">
                         </div>
                         <div>
                             <label class="block text-sm font-bold mb-2 text-slate-600">번호</label>
-                            <input type="number" id="student-num" min="1" value="1" class="w-full p-3 rounded-xl border-2 border-slate-200 text-center outline-none">
+                            <input type="number" id="student-num" min="1" value="1" class="w-full p-4 rounded-xl border-2 border-slate-200 text-center outline-none bg-slate-50 font-bold">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-bold mb-2 text-slate-600">이름</label>
-                        <input type="text" id="student-name" placeholder="이름을 입력하세요" class="w-full p-3 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg">
+                        <input type="text" id="student-name" placeholder="이름을 입력하세요" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700">
                     </div>
 
-                    <button onclick="prepareGame()" class="w-full py-4 mt-4 bg-primary text-white rounded-xl font-jua text-2xl hover:bg-purple-500 transition shadow-md">준비 완료!</button>
+                    <button onclick="prepareGame()" class="w-full py-5 mt-4 bg-primary text-white rounded-2xl font-jua text-3xl hover:bg-purple-500 transition shadow-lg transform hover:-translate-y-1">준비 완료!</button>
                 </div>
             </div>
         </div>
 
         <!-- 4. 게임 화면 -->
-        <div id="screen-game" class="screen w-full h-full flex flex-col relative overflow-hidden">
+        <div id="screen-game" class="screen flex-col w-full h-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100">
             <!-- 상단 정보 -->
-            <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-20 pointer-events-none">
-                <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-sm border border-slate-100 pointer-events-auto">
-                    <span class="text-slate-500 font-bold mr-2">목표 단어:</span>
-                    <span id="game-target-word" class="text-3xl font-jua text-accent">word</span>
+            <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
+                <div class="bg-white/90 backdrop-blur px-8 py-3 rounded-full shadow-lg border border-slate-200 pointer-events-auto">
+                    <span class="text-slate-500 font-bold mr-3 text-lg">목표 단어:</span>
+                    <span id="game-target-word" class="text-4xl font-jua text-accent">word</span>
                 </div>
-                <div class="bg-slate-800 text-white px-6 py-2 rounded-full shadow-sm font-jua text-xl pointer-events-auto">
-                    단어들이 날아갑니다!
-                </div>
+                <!-- 게임 중 나가기 버튼 -->
+                <button onclick="if(confirm('게임을 종료하시겠습니까? 점수가 저장되지 않습니다.')) navigate('home')" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
+                    나가기 <i class="fas fa-sign-out-alt ml-1"></i>
+                </button>
             </div>
 
             <!-- 단어가 날아다니는 캔버스 -->
             <div id="game-canvas" class="flex-grow w-full h-full relative z-0">
-                <!-- 애니메이션 요소들이 여기에 추가됨 -->
+                <!-- 애니메이션 요소 추가 영역 -->
             </div>
 
             <!-- 하단 정답 입력창 -->
             <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
-                <div class="bg-white rounded-2xl shadow-2xl p-6 border-4 border-secondary flex flex-col items-center">
-                    <p class="text-slate-600 font-bold mb-3 text-lg text-center">정답 단어가 몇 개 지나갔나요?</p>
+                <div class="bg-white rounded-3xl shadow-2xl p-8 border-4 border-secondary flex flex-col items-center">
+                    <p class="text-slate-700 font-jua mb-4 text-2xl text-center">정답 단어가 몇 개 지나갔나요?</p>
                     <div class="flex gap-3 w-full">
-                        <input type="number" id="game-answer" placeholder="개수 입력" class="flex-grow p-4 rounded-xl border-2 border-slate-200 text-center text-2xl font-bold outline-none focus:border-accent">
-                        <button onclick="submitAnswer()" class="bg-accent hover:bg-orange-600 text-white px-8 rounded-xl font-jua text-2xl transition whitespace-nowrap">정답 확인</button>
+                        <input type="number" id="game-answer" placeholder="개수 입력" class="flex-grow p-4 rounded-xl border-2 border-slate-200 text-center text-3xl font-bold outline-none focus:border-accent bg-slate-50">
+                        <button onclick="submitAnswer()" class="bg-accent hover:bg-orange-600 text-white px-8 rounded-xl font-jua text-3xl transition whitespace-nowrap shadow-md">확인</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 5. 결과 화면 -->
-        <div id="screen-result" class="screen w-full max-w-md text-center">
-            <div class="bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center">
-                <i id="result-icon" class="fas fa-check-circle text-7xl text-green-500 mb-6"></i>
-                <h2 id="result-title" class="text-4xl font-jua text-slate-800 mb-2">정답입니다!</h2>
-                <p id="result-desc" class="text-lg text-slate-500 mb-8">완벽하게 개수를 맞췄어요.</p>
+        <div id="screen-result" class="screen flex-col items-center justify-center w-full max-w-lg">
+            <div class="bg-white rounded-3xl shadow-2xl p-12 flex flex-col items-center border border-slate-100 w-full">
+                <i id="result-icon" class="fas fa-check-circle text-8xl text-green-500 mb-6"></i>
+                <h2 id="result-title" class="text-5xl font-jua text-slate-800 mb-3">정답입니다!</h2>
+                <p id="result-desc" class="text-xl text-slate-500 mb-8 font-medium">완벽하게 개수를 맞췄어요.</p>
                 
-                <div class="bg-slate-50 w-full py-6 rounded-2xl mb-8">
+                <div class="bg-slate-50 w-full py-8 rounded-2xl mb-10 border border-slate-200">
                     <div class="text-sm text-slate-400 font-bold">획득 점수</div>
-                    <div id="result-score" class="text-6xl font-jua text-primary mt-1">100</div>
+                    <div id="result-score" class="text-7xl font-jua text-primary mt-2">100</div>
                 </div>
 
                 <div class="flex gap-4 w-full">
-                    <button onclick="navigate('leaderboard')" class="flex-1 py-3 bg-secondary text-slate-800 rounded-xl font-bold hover:bg-[#c9f567] transition">순위 보기</button>
-                    <button onclick="navigate('home')" class="flex-1 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">처음으로</button>
+                    <button onclick="navigate('leaderboard')" class="flex-1 py-4 bg-secondary text-slate-800 rounded-xl font-jua text-2xl hover:bg-[#c9f567] transition shadow-md">순위 보기</button>
+                    <button onclick="navigate('home')" class="flex-1 py-4 bg-slate-200 text-slate-700 rounded-xl font-jua text-2xl hover:bg-slate-300 transition shadow-md">처음으로</button>
                 </div>
             </div>
         </div>
 
         <!-- 6. 명예의 전당 -->
-        <div id="screen-leaderboard" class="screen w-full max-w-5xl h-full flex flex-col">
-            <div class="bg-white rounded-2xl shadow-sm p-6 flex-grow flex flex-col mb-4">
-                <div class="flex justify-between items-end mb-6 border-b pb-4">
-                    <h2 class="text-3xl font-jua text-amber-500"><i class="fas fa-trophy mr-2"></i>명예의 전당</h2>
+        <div id="screen-leaderboard" class="screen flex-col w-full max-w-5xl h-full">
+            <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
+                <div class="flex justify-between items-end mb-6 border-b pb-5">
+                    <h2 class="text-4xl font-jua text-amber-500"><i class="fas fa-trophy mr-3"></i>명예의 전당</h2>
                     
                     <!-- 필터 -->
-                    <div class="flex gap-2">
-                        <select id="filter-unit" onchange="renderLeaderboard()" class="p-2 border rounded-lg outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                    <div class="flex gap-3">
+                        <select id="filter-unit" onchange="renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">모든 단원</option>
                         </select>
-                        <select id="filter-grade" onchange="renderLeaderboard()" class="p-2 border rounded-lg outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                        <select id="filter-grade" onchange="renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">전체 학년</option>
-                            <option value="1">1학년</option>
-                            <option value="2">2학년</option>
-                            <option value="3">3학년</option>
-                            <option value="4">4학년</option>
-                            <option value="5">5학년</option>
-                            <option value="6">6학년</option>
+                            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+                            <option value="4">4학년</option><option value="5">5학년</option><option value="6">6학년</option>
                         </select>
-                        <select id="filter-class" onchange="renderLeaderboard()" class="p-2 border rounded-lg outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                        <select id="filter-class" onchange="renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">전체 반</option>
                             <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
                             <option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option>
@@ -261,15 +278,15 @@
                     </div>
                 </div>
 
-                <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200">
+                <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-800 text-white sticky top-0 z-10">
                             <tr>
-                                <th class="p-4 font-bold text-center w-20">순위</th>
-                                <th class="p-4 font-bold">단원명</th>
-                                <th class="p-4 font-bold text-center">학년 / 반</th>
-                                <th class="p-4 font-bold">이름</th>
-                                <th class="p-4 font-bold text-right text-secondary">점수</th>
+                                <th class="p-5 font-bold text-center w-24 text-lg">순위</th>
+                                <th class="p-5 font-bold text-lg">단원명</th>
+                                <th class="p-5 font-bold text-center text-lg">학년 / 반</th>
+                                <th class="p-5 font-bold text-lg">이름</th>
+                                <th class="p-5 font-bold text-right text-secondary text-lg">점수</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body" class="bg-white divide-y divide-slate-100">
@@ -285,7 +302,7 @@
     <!-- Firebase & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global State
@@ -300,15 +317,25 @@
             userId: null
         };
 
-        // Navigation
+        // Navigation (동적 상단바 숨김/표시 처리 추가)
         window.navigate = function(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(`screen-${screenId}`).classList.add('active');
             
+            // 상단 네비게이션 바 제어
+            const navBar = document.getElementById('main-nav');
+            if (screenId === 'home' || screenId === 'game') {
+                navBar.classList.add('hidden');
+                navBar.classList.remove('flex');
+            } else {
+                navBar.classList.remove('hidden');
+                navBar.classList.add('flex');
+            }
+            
             if(screenId === 'leaderboard') fetchScores(); // 명예의 전당 진입 시 데이터 갱신
         };
 
-        // Initialize Firebase (RULE 1, 2, 3 적용)
+        // Initialize Firebase
         async function initFirebase() {
             try {
                 const firebaseConfig = {
@@ -325,37 +352,38 @@
                 const auth = getAuth(app);
                 state.db = getFirestore(app);
 
-                // RULE 3: Auth Before Queries
-                await signInAnonymously(auth);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
                 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         state.userId = user.uid;
-                        await fetchUnits(); // 인증 후 데이터 로드
+                        await fetchUnits();
                         document.getElementById('loading-overlay').style.display = 'none';
                     }
                 });
             } catch (e) {
                 console.error("Firebase 초기화 에러:", e);
-                alert("데이터베이스 연결에 문제가 발생했습니다.");
+                alert("데이터베이스 연결 실패!\n상세 에러: " + e.message);
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         }
 
-        // ====== 데이터베이스 통신 (교사 모드 - 단원) ======
+        // ====== 교사 모드 (단원 관리) ======
         async function fetchUnits() {
             if (!state.db) return;
             try {
-                // RULE 1: Strict Paths (Public Data)
                 const unitsRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'units');
-                const snapshot = await getDocs(unitsRef); // RULE 2: No complex queries
+                const snapshot = await getDocs(unitsRef);
                 
                 state.units = [];
                 snapshot.forEach(doc => {
                     state.units.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // 생성일 기준 내림차순 정렬 (메모리에서 처리)
                 state.units.sort((a, b) => b.createdAt - a.createdAt);
                 
                 renderUnits();
@@ -384,7 +412,6 @@
                 const unitsRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'units');
                 await addDoc(unitsRef, newUnit);
                 
-                // 폼 초기화
                 document.getElementById('unit-title').value = '';
                 document.getElementById('unit-target').value = '';
                 document.getElementById('unit-distractors').value = '';
@@ -392,8 +419,7 @@
                 await fetchUnits();
                 alert("단원이 성공적으로 추가되었습니다.");
             } catch (e) {
-                console.error("저장 실패", e);
-                alert("저장에 실패했습니다.");
+                alert("단원 저장에 실패했습니다: " + e.message);
             }
         }
 
@@ -404,33 +430,31 @@
                 await deleteDoc(docRef);
                 await fetchUnits();
             } catch (e) {
-                console.error("삭제 실패", e);
+                alert("삭제 실패: " + e.message);
             }
         }
 
-        // UI 렌더링 - 단원 리스트 (교사 모드)
         function renderUnits() {
             const container = document.getElementById('unit-list');
             if (state.units.length === 0) {
-                container.innerHTML = '<div class="text-center text-slate-400 py-10">등록된 단원이 없습니다.</div>';
+                container.innerHTML = '<div class="text-center text-slate-400 py-10 font-medium">등록된 단원이 없습니다. 좌측에서 추가해주세요.</div>';
                 return;
             }
 
             container.innerHTML = state.units.map(unit => `
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center hover:shadow-md transition">
                     <div>
                         <div class="font-bold text-slate-800 text-lg">${unit.title}</div>
-                        <div class="text-sm text-slate-500 mt-1">
-                            <span class="text-accent font-bold mr-2">정답: ${unit.target}</span>
-                            <span>오답: ${unit.distractors.join(', ')}</span>
+                        <div class="text-sm text-slate-500 mt-2">
+                            <span class="bg-accent/10 text-accent px-2 py-1 rounded-md font-bold mr-2">정답: ${unit.target}</span>
+                            <span class="bg-slate-100 px-2 py-1 rounded-md text-slate-600">오답: ${unit.distractors.join(', ')}</span>
                         </div>
                     </div>
-                    <button onclick="deleteUnit('${unit.id}')" class="text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
+                    <button onclick="deleteUnit('${unit.id}')" class="text-red-400 hover:bg-red-50 hover:text-red-600 p-3 rounded-xl transition"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
-        // UI 렌더링 - 셀렉트 박스 (학생 화면, 필터)
         function renderUnitOptions() {
             const studentSelect = document.getElementById('student-unit');
             const filterSelect = document.getElementById('filter-unit');
@@ -466,13 +490,12 @@
 
         function startGameAnimation() {
             const canvas = document.getElementById('game-canvas');
-            canvas.innerHTML = ''; // 초기화
+            canvas.innerHTML = ''; 
             
             const unit = state.currentUnit;
             
-            // 랜덤 정답 개수 (4개 ~ 8개)
+            // 정답 개수 4~8개 설정
             state.gameTargetCount = Math.floor(Math.random() * 5) + 4;
-            // 랜덤 오답 개수 (정답의 1.5배 ~ 2배)
             const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
 
             let words = [];
@@ -482,7 +505,6 @@
                 words.push({ text: randomDis, isTarget: false });
             }
 
-            // 배열 섞기
             words.sort(() => Math.random() - 0.5);
 
             words.forEach(wordObj => {
@@ -490,10 +512,9 @@
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                // 랜덤 속성 부여
-                const topPercent = Math.random() * 80 + 10; // 10% ~ 90% 높이
-                const duration = Math.random() * 5 + 4; // 4초 ~ 9초 동안 비행
-                const delay = Math.random() * 4; // 0초 ~ 4초 뒤 출발
+                const topPercent = Math.random() * 70 + 15; // 상하 여백 확보
+                const duration = Math.random() * 5 + 4; 
+                const delay = Math.random() * 4; 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 
@@ -501,7 +522,6 @@
                 el.style.color = color;
                 el.style.animation = `${direction} ${duration}s ease-in-out ${delay}s forwards`;
                 
-                // 오답 중 일부는 약간 다른 스타일 부여
                 if(!wordObj.isTarget && Math.random() > 0.5) el.style.fontWeight = '400';
 
                 canvas.appendChild(el);
@@ -524,31 +544,30 @@
                 score = 100;
                 titleEl.innerText = "정답입니다!";
                 descEl.innerText = "완벽하게 개수를 맞췄어요! (정답: " + state.gameTargetCount + "개)";
-                iconEl.className = "fas fa-check-circle text-7xl text-green-500 mb-6";
+                iconEl.className = "fas fa-check-circle text-8xl text-green-500 mb-6";
                 iconEl.classList.add('fa-bounce');
             } else if(diff <= 2) {
                 score = 50;
                 titleEl.innerText = "아까워요!";
                 descEl.innerText = `거의 다 맞췄는데 아쉽네요! (정답은 ${state.gameTargetCount}개 였습니다)`;
-                iconEl.className = "fas fa-exclamation-circle text-7xl text-orange-500 mb-6";
+                iconEl.className = "fas fa-exclamation-circle text-8xl text-orange-500 mb-6";
                 iconEl.classList.remove('fa-bounce');
             } else {
                 score = 0;
                 titleEl.innerText = "틀렸습니다!";
                 descEl.innerText = `다음에 다시 도전해봐요! (정답은 ${state.gameTargetCount}개 였습니다)`;
-                iconEl.className = "fas fa-times-circle text-7xl text-red-500 mb-6";
+                iconEl.className = "fas fa-times-circle text-8xl text-red-500 mb-6";
                 iconEl.classList.remove('fa-bounce');
             }
 
             document.getElementById('result-score').innerText = score;
             
-            // 점수 저장
+            // 결과 화면 표시 전 점수 저장 수행
             await saveScore(score);
-            
             navigate('result');
         }
 
-        // ====== 데이터베이스 통신 (학생 점수) ======
+        // ====== 학생 점수 및 명예의 전당 ======
         async function saveScore(score) {
             try {
                 const scoresRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores');
@@ -584,7 +603,6 @@
             }
         }
 
-        // 명예의 전당 렌더링 (메모리 필터링 적용 - RULE 2)
         window.renderLeaderboard = function() {
             const filterUnit = document.getElementById('filter-unit').value;
             const filterGrade = document.getElementById('filter-grade').value;
@@ -596,37 +614,36 @@
             if(filterGrade !== 'all') filtered = filtered.filter(s => s.grade === parseInt(filterGrade));
             if(filterClass !== 'all') filtered = filtered.filter(s => s.classNum === parseInt(filterClass));
 
-            // 점수 내림차순, 같으면 최신순 정렬
             filtered.sort((a, b) => {
                 if(b.score !== a.score) return b.score - a.score;
-                return b.createdAt - a.createdAt;
+                return b.createdAt - a.createdAt; // 점수 같으면 최신순
             });
 
             const tbody = document.getElementById('leaderboard-body');
             
             if(filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">등록된 기록이 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium text-lg">등록된 기록이 없습니다.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = filtered.map((s, index) => {
                 let rankTrophy = `${index + 1}`;
-                if(index === 0) rankTrophy = '<i class="fas fa-trophy text-yellow-400 text-xl"></i>';
-                else if(index === 1) rankTrophy = '<i class="fas fa-trophy text-slate-400 text-xl"></i>';
-                else if(index === 2) rankTrophy = '<i class="fas fa-trophy text-amber-700 text-xl"></i>';
+                if(index === 0) rankTrophy = '<i class="fas fa-trophy text-yellow-400 text-3xl"></i>';
+                else if(index === 1) rankTrophy = '<i class="fas fa-trophy text-slate-400 text-2xl"></i>';
+                else if(index === 2) rankTrophy = '<i class="fas fa-trophy text-amber-700 text-2xl"></i>';
 
                 return `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-4 text-center font-bold text-slate-500">${rankTrophy}</td>
-                    <td class="p-4 font-bold text-slate-700">${s.unitTitle}</td>
-                    <td class="p-4 text-center text-slate-500">${s.grade}학년 ${s.classNum}반</td>
-                    <td class="p-4 font-bold">${s.name} <span class="text-xs font-normal text-slate-400 ml-1">(${s.stuNum}번)</span></td>
-                    <td class="p-4 text-right font-jua text-2xl text-primary">${s.score}</td>
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                    <td class="p-5 text-center font-jua text-xl text-slate-500">${rankTrophy}</td>
+                    <td class="p-5 font-bold text-slate-700 text-lg">${s.unitTitle}</td>
+                    <td class="p-5 text-center text-slate-500 font-medium">${s.grade}학년 ${s.classNum}반</td>
+                    <td class="p-5 font-bold text-lg">${s.name} <span class="text-sm font-normal text-slate-400 ml-1">(${s.stuNum}번)</span></td>
+                    <td class="p-5 text-right font-jua text-3xl text-primary">${s.score}</td>
                 </tr>
             `}).join('');
         }
 
-        // 실행
+        // 앱 구동
         window.onload = initFirebase;
     </script>
 </body>
