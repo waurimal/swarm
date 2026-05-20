@@ -53,11 +53,12 @@
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            font-size: 2.5rem;
+            font-size: 10rem;
             white-space: nowrap;
             user-select: none;
-            text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
+            text-shadow: 4px 4px 0px white, -4px -4px 0px white, 4px -4px 0px white, -4px 4px 0px white;
             opacity: 0;
+            z-index: 10;
         }
 
         /* 커스텀 스크롤바 */
@@ -319,10 +320,10 @@
 
             <!-- 컴팩트한 하단 정답 입력창 -->
             <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-sm px-4">
-                <div class="bg-white rounded-[24px] shadow-xl p-6 border-2 border-[#dcfd8b] flex flex-col items-center">
+                <div class="bg-white rounded-[24px] shadow-xl p-6 border-2 border-[#dcfd8b] flex flex-col items-center max-w-full">
                     <p class="text-slate-700 font-jua mb-3 text-xl text-center">정답 단어가 몇 개 지나갔나요?</p>
                     <div class="flex gap-2 w-full">
-                        <input type="number" id="game-answer" class="flex-grow p-3 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자">
+                        <input type="number" id="game-answer" class="flex-1 min-w-0 w-full p-3 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자" onkeypress="if(event.key === 'Enter') submitAnswer()">
                         <button onclick="submitAnswer()" class="bg-[#ff823a] hover:bg-orange-600 text-white px-6 rounded-xl font-jua text-2xl transition whitespace-nowrap shadow-sm">확인</button>
                     </div>
                 </div>
@@ -882,19 +883,25 @@
             if(diff === 0) {
                 score = 100;
                 titleEl.innerText = "정답입니다!";
-                descEl.innerText = "완벽하게 개수를 맞췄어요! (정답: " + state.gameTargetCount + "개)";
+                descEl.innerText = `완벽하게 개수를 맞췄어요! (정답: ${state.gameTargetCount}개)`;
                 iconEl.className = "fas fa-check-circle text-8xl text-green-500 mb-6";
                 iconEl.classList.add('fa-bounce');
-            } else if(diff <= 2) {
+            } else if(diff === 1) {
+                score = 80;
+                titleEl.innerText = "거의 다 왔어요!";
+                descEl.innerText = `1개 차이로 아쉽게 틀렸네요! (정답: ${state.gameTargetCount}개)`;
+                iconEl.className = "fas fa-star text-8xl text-yellow-400 mb-6";
+                iconEl.classList.remove('fa-bounce');
+            } else if(diff === 2) {
                 score = 50;
                 titleEl.innerText = "아까워요!";
-                descEl.innerText = `거의 다 맞췄는데 아쉽네요! (정답은 ${state.gameTargetCount}개 였습니다)`;
+                descEl.innerText = `2개 차이네요. 조금만 더 집중해봐요! (정답: ${state.gameTargetCount}개)`;
                 iconEl.className = "fas fa-exclamation-circle text-8xl text-orange-500 mb-6";
                 iconEl.classList.remove('fa-bounce');
             } else {
                 score = 0;
                 titleEl.innerText = "틀렸습니다!";
-                descEl.innerText = `다음에 다시 도전해봐요! (정답은 ${state.gameTargetCount}개 였습니다)`;
+                descEl.innerText = `차이가 많이 나네요. 다음엔 더 잘할 수 있어요! (정답: ${state.gameTargetCount}개)`;
                 iconEl.className = "fas fa-times-circle text-8xl text-red-500 mb-6";
                 iconEl.classList.remove('fa-bounce');
             }
