@@ -296,9 +296,15 @@
         <div id="screen-game" class="screen flex-col w-full h-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100">
             <!-- 상단 정보 -->
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
-                <div class="bg-white/90 backdrop-blur px-8 py-3 rounded-full shadow-lg border border-slate-200 pointer-events-auto">
-                    <span class="text-slate-500 font-bold mr-3 text-lg">이번에 찾을 단어:</span>
-                    <span id="game-target-word" class="text-4xl font-jua text-accent">word</span>
+                <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-500 font-bold text-lg">단어:</span>
+                        <span id="game-target-word" class="text-4xl font-jua text-accent">word</span>
+                    </div>
+                    <div class="w-px h-8 bg-slate-300"></div>
+                    <div class="text-slate-500 font-bold text-lg whitespace-nowrap">
+                        진행: <span id="game-progress" class="text-primary font-jua text-2xl ml-1">1 / 5</span>
+                    </div>
                 </div>
                 <!-- 게임 중 나가기 버튼 -->
                 <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => navigate('home'))" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
@@ -311,7 +317,7 @@
                 <!-- 애니메이션 요소 추가 영역 -->
             </div>
 
-            <!-- 수정사항 반영: 더 작아지고 둥근 느낌의 컴팩트한 하단 정답 입력창 -->
+            <!-- 컴팩트한 하단 정답 입력창 -->
             <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-sm px-4">
                 <div class="bg-white rounded-[24px] shadow-xl p-6 border-2 border-[#dcfd8b] flex flex-col items-center">
                     <p class="text-slate-700 font-jua mb-3 text-xl text-center">정답 단어가 몇 개 지나갔나요?</p>
@@ -323,7 +329,7 @@
             </div>
         </div>
 
-        <!-- 6. 결과 화면 -->
+        <!-- 6. 단일 라운드 결과 화면 -->
         <div id="screen-result" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-12 flex flex-col items-center border border-slate-100 w-full">
                 <i id="result-icon" class="fas fa-check-circle text-8xl text-green-500 mb-6"></i>
@@ -335,14 +341,53 @@
                     <div id="result-score" class="text-7xl font-jua text-primary mt-2">100</div>
                 </div>
 
+                <div id="result-buttons" class="flex gap-4 w-full">
+                    <!-- JS 렌더링 (다음 문제 또는 최종 결과 보기) -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 최종 (종합) 결과 화면 -->
+        <div id="screen-final-result" class="screen flex-col items-center justify-center w-full max-w-3xl">
+            <div class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center border border-slate-100 w-full">
+                <h2 class="text-5xl font-jua text-primary mb-6">모든 문제 완료!</h2>
+                
+                <div class="bg-slate-50 w-full p-6 rounded-2xl mb-8 border border-slate-200 flex justify-between items-center text-center">
+                    <div>
+                        <p class="text-slate-500 font-bold mb-1">참여자</p>
+                        <p id="final-student-info" class="text-2xl font-jua text-slate-800">1학년 1반 홍길동</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 font-bold mb-1">최종 총점</p>
+                        <p id="final-total-score" class="text-5xl font-jua text-accent">300</p>
+                    </div>
+                </div>
+
+                <div class="w-full overflow-auto max-h-64 mb-8 border border-slate-200 rounded-xl shadow-inner">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 font-bold text-center">No.</th>
+                                <th class="p-3 font-bold">찾은 단어</th>
+                                <th class="p-3 font-bold text-center">실제 정답수</th>
+                                <th class="p-3 font-bold text-center">나의 입력</th>
+                                <th class="p-3 font-bold text-right text-primary">획득 점수</th>
+                            </tr>
+                        </thead>
+                        <tbody id="final-result-tbody" class="bg-white divide-y divide-slate-100">
+                            <!-- JS 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="flex gap-4 w-full">
-                    <button onclick="navigate('leaderboard')" class="flex-1 py-4 bg-secondary text-slate-800 rounded-xl font-jua text-2xl hover:bg-[#c9f567] transition shadow-md">순위 보기</button>
+                    <button onclick="navigate('leaderboard')" class="flex-1 py-4 bg-secondary text-slate-800 rounded-xl font-jua text-2xl hover:bg-[#c9f567] transition shadow-md">명예의 전당</button>
                     <button onclick="navigate('home')" class="flex-1 py-4 bg-slate-200 text-slate-700 rounded-xl font-jua text-2xl hover:bg-slate-300 transition shadow-md">처음으로</button>
                 </div>
             </div>
         </div>
 
-        <!-- 7. 명예의 전당 -->
+        <!-- 8. 명예의 전당 -->
         <div id="screen-leaderboard" class="screen flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
@@ -399,14 +444,20 @@
         const state = {
             units: [],
             scores: [],
-            config: { schoolName: '카운팅워즈 학교', teacherPassword: '0000' }, // 환경설정 초기값
+            config: { schoolName: '카운팅워즈 학교', teacherPassword: '0000' },
             currentUnit: null,
-            currentTargetWord: '',
             studentInfo: null,
-            gameTargetCount: 0,
             db: null,
             appId: typeof __app_id !== 'undefined' ? __app_id : 'counting-words-default',
-            userId: null
+            userId: null,
+            
+            // 다중 라운드 관리를 위한 상태
+            gameWords: [],
+            currentRoundIndex: 0,
+            currentTargetWord: '',
+            gameTargetCount: 0,
+            roundResults: [], // 각 라운드 결과 저장 배열
+            totalScore: 0
         };
 
         // --- Custom Modals ---
@@ -420,7 +471,6 @@
         window.showConfirm = function(msg, onYesCallback) {
             document.getElementById('modal-confirm-msg').innerText = msg;
             const yesBtn = document.getElementById('modal-confirm-yes');
-            // Remove old event listeners
             yesBtn.replaceWith(yesBtn.cloneNode(true));
             const newYesBtn = document.getElementById('modal-confirm-yes');
             newYesBtn.addEventListener('click', () => {
@@ -490,7 +540,7 @@
             }
         }
 
-        // ====== 시스템 환경 설정 (학교명 & 비밀번호) ======
+        // ====== 시스템 환경 설정 ======
         async function fetchConfig() {
             try {
                 const configRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'config', 'main');
@@ -498,7 +548,6 @@
                 if (docSnap.exists()) {
                     state.config = docSnap.data();
                 } else {
-                    // 첫 접속 시 초기 데이터 생성
                     await setDoc(configRef, state.config);
                 }
                 updateSchoolNameUI();
@@ -545,7 +594,6 @@
             }
         }
 
-        // 교사모드 내 탭 전환 로직
         window.switchTeacherTab = function(tabName) {
             ['units', 'scores', 'settings'].forEach(name => {
                 document.getElementById(`teacher-tab-${name}`).classList.add('hidden');
@@ -636,9 +684,10 @@
                     <div>
                         <div class="font-bold text-slate-800 text-lg">${unit.title}</div>
                         <div class="text-sm text-slate-500 mt-2">
-                            <span class="bg-accent/10 text-accent px-2 py-1 rounded-md font-bold mr-2">정답: ${targetsList}</span>
-                            <span class="bg-slate-100 px-2 py-1 rounded-md text-slate-600"><i class="fas fa-magic mr-1"></i>오답 자동 생성됨</span>
+                            <span class="bg-accent/10 text-accent px-2 py-1 rounded-md font-bold mr-2">정답 단어수: ${unit.targets ? unit.targets.length : 1}개</span>
+                            <span class="bg-slate-100 px-2 py-1 rounded-md text-slate-600"><i class="fas fa-magic mr-1"></i>오답 자동 생성</span>
                         </div>
+                        <div class="text-xs text-slate-400 mt-1 truncate max-w-sm">${targetsList}</div>
                     </div>
                     <button onclick="deleteUnit('${unit.id}')" class="text-red-400 hover:bg-red-50 hover:text-red-600 p-3 rounded-xl transition"><i class="fas fa-trash"></i></button>
                 </div>
@@ -657,7 +706,7 @@
 
         // ====== 교사 모드 (학생 기록 관리) ======
         window.fetchTeacherScores = async function() {
-            await fetchScores(); // 상태 업데이트
+            await fetchScores(); 
             const tbody = document.getElementById('teacher-score-list');
             
             if(state.scores.length === 0) {
@@ -665,7 +714,6 @@
                 return;
             }
 
-            // 최신 기록순 정렬
             const sorted = [...state.scores].sort((a,b) => b.createdAt - a.createdAt);
 
             tbody.innerHTML = sorted.map(s => `
@@ -735,7 +783,7 @@
             return Array.from(results);
         }
 
-        // ====== 게임 로직 ======
+        // ====== 게임 다중 라운드 로직 ======
         const colors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
 
         window.prepareGame = function() {
@@ -751,10 +799,23 @@
             state.currentUnit = state.units.find(u => u.id === unitId);
             state.studentInfo = { grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
             
+            // 단원의 모든 단어를 무작위로 섞어서 게임 문제 목록으로 설정
             const targetsArray = state.currentUnit.targets || [state.currentUnit.target];
-            state.currentTargetWord = targetsArray[Math.floor(Math.random() * targetsArray.length)];
+            state.gameWords = [...targetsArray].sort(() => Math.random() - 0.5);
+            
+            // 다중 라운드용 상태 초기화
+            state.currentRoundIndex = 0;
+            state.roundResults = [];
+            state.totalScore = 0;
+            
+            startRound();
+        }
+
+        function startRound() {
+            state.currentTargetWord = state.gameWords[state.currentRoundIndex];
             
             document.getElementById('game-target-word').innerText = state.currentTargetWord;
+            document.getElementById('game-progress').innerText = `${state.currentRoundIndex + 1} / ${state.gameWords.length}`;
             document.getElementById('game-answer').value = '';
             
             navigate('game');
@@ -786,7 +847,8 @@
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                const topPercent = Math.random() * 65 + 10; 
+                // 수정사항: 입력칸(하단 30%)에 겹치지 않도록 높이를 상단 10% ~ 60% 영역으로 제한
+                const topPercent = Math.random() * 50 + 10; 
                 const duration = Math.random() * 5 + 4; 
                 const delay = Math.random() * 4; 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
@@ -801,11 +863,11 @@
                 canvas.appendChild(el);
             });
             
-            // 입력창 초기화
             document.getElementById('game-answer').value = '';
+            document.getElementById('game-answer').focus();
         }
 
-        window.submitAnswer = async function() {
+        window.submitAnswer = function() {
             const answerInput = document.getElementById('game-answer').value;
             if(answerInput === '') return showAlert("개수를 입력해주세요!");
             
@@ -839,12 +901,60 @@
 
             document.getElementById('result-score').innerText = score;
             
-            await saveScore(score);
+            // 현재 라운드 결과 저장
+            state.roundResults.push({
+                word: state.currentTargetWord,
+                targetCount: state.gameTargetCount,
+                userAnswer: answer,
+                score: score
+            });
+            state.totalScore += score;
+            
+            // 다음 문제 또는 최종 결과 버튼 설정
+            const btnContainer = document.getElementById('result-buttons');
+            if (state.currentRoundIndex < state.gameWords.length - 1) {
+                btnContainer.innerHTML = `
+                    <button onclick="nextRound()" class="w-full py-5 bg-secondary text-slate-800 rounded-2xl font-jua text-3xl hover:bg-[#c9f567] transition shadow-lg">다음 문제 풀기 <i class="fas fa-arrow-right ml-2"></i></button>
+                `;
+            } else {
+                btnContainer.innerHTML = `
+                    <button onclick="showFinalResult()" class="w-full py-5 bg-primary text-white rounded-2xl font-jua text-3xl hover:bg-purple-500 transition shadow-lg">최종 결과 확인하기 <i class="fas fa-flag-checkered ml-2"></i></button>
+                `;
+            }
+            
             navigate('result');
         }
 
-        // ====== 학생 점수 및 명예의 전당 ======
-        async function saveScore(score) {
+        window.nextRound = function() {
+            state.currentRoundIndex++;
+            startRound();
+        }
+
+        window.showFinalResult = async function() {
+            // 학생 정보 및 총점 표시
+            document.getElementById('final-student-info').innerText = `${state.studentInfo.grade}학년 ${state.studentInfo.classNum}반 ${state.studentInfo.name}`;
+            document.getElementById('final-total-score').innerText = state.totalScore;
+            
+            // 테이블 결과 세팅
+            const tbody = document.getElementById('final-result-tbody');
+            tbody.innerHTML = state.roundResults.map((r, i) => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                    <td class="p-3 text-center text-slate-400 font-bold">${i + 1}</td>
+                    <td class="p-3 font-bold text-lg text-slate-700">${r.word}</td>
+                    <td class="p-3 text-center text-green-600 font-bold text-lg">${r.targetCount}</td>
+                    <td class="p-3 text-center ${r.targetCount === r.userAnswer ? 'text-green-600' : 'text-red-500'} font-bold text-lg">${r.userAnswer}</td>
+                    <td class="p-3 text-right text-primary font-jua text-2xl">${r.score}</td>
+                </tr>
+            `).join('');
+
+            // 모든 단원 종료 후 총점을 Firebase에 한 번만 저장
+            await saveScore(state.totalScore);
+            
+            navigate('final-result');
+        }
+
+        // ====== 학생 점수 DB 저장 ======
+        async function saveScore(totalScore) {
             try {
                 const scoresRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores');
                 await addDoc(scoresRef, {
@@ -854,7 +964,7 @@
                     classNum: state.studentInfo.classNum,
                     stuNum: state.studentInfo.stuNum,
                     name: state.studentInfo.name,
-                    score: score,
+                    score: totalScore,
                     createdAt: Date.now()
                 });
             } catch(e) {
