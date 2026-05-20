@@ -199,9 +199,31 @@
 
                 <!-- 탭 2: 학생 기록 관리 -->
                 <div id="teacher-tab-scores" class="hidden flex-col flex-grow overflow-hidden h-full">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-slate-700">학생 플레이 기록</h3>
-                        <button onclick="fetchTeacherScores()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold transition"><i class="fas fa-sync-alt mr-2"></i>새로고침</button>
+                    <div class="flex flex-col gap-4 mb-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-slate-700">학생 플레이 기록</h3>
+                            <div class="flex gap-2">
+                                <button onclick="deleteFilteredScores()" class="text-sm bg-red-100 hover:bg-red-200 text-red-600 px-4 py-2 rounded-lg font-bold transition shadow-sm"><i class="fas fa-trash-alt mr-2"></i>필터 결과 삭제</button>
+                                <button onclick="fetchTeacherScores()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold transition shadow-sm"><i class="fas fa-sync-alt mr-2"></i>새로고침</button>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <select id="filter-score-unit" onchange="renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
+                                <option value="all">모든 단원</option>
+                            </select>
+                            <select id="filter-score-grade" onchange="renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
+                                <option value="all">전체 학년</option>
+                                <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+                                <option value="4">4학년</option><option value="5">5학년</option><option value="6">6학년</option>
+                            </select>
+                            <select id="filter-score-class" onchange="renderTeacherScores()" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white outline-none focus:border-primary">
+                                <option value="all">전체 반</option>
+                                <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
+                                <option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option>
+                                <option value="9">9반</option><option value="10">10반</option><option value="11">11반</option><option value="12">12반</option>
+                                <option value="13">13반</option><option value="14">14반</option><option value="15">15반</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner">
                         <table class="w-full text-left border-collapse">
@@ -705,15 +727,19 @@
             filterSelect.innerHTML = '<option value="all">모든 단원</option>' + options;
         }
 
-// ====== 교사 모드 (학생 기록 관리) ======
+        // ====== 교사 모드 (학생 기록 관리) ======
         window.fetchTeacherScores = async function() {
             await fetchScores();
             
-            // 필터 옵션 초기화
+            // 필터 옵션 초기화 (현재 선택값 유지하며 단원 목록 갱신)
             const unitSelect = document.getElementById('filter-score-unit');
+            const currentUnitValue = unitSelect.value;
             unitSelect.innerHTML = '<option value="all">모든 단원</option>' + state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
-            
-            renderTeacherScores();
+            if ([...unitSelect.options].some(opt => opt.value === currentUnitValue)) {
+                unitSelect.value = currentUnitValue;
+            }
+
+            window.renderTeacherScores();
         }
 
         window.renderTeacherScores = function() {
@@ -728,18 +754,20 @@
 
             const tbody = document.getElementById('teacher-score-list');
             if(filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">기록이 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">해당 조건에 기록된 점수가 없습니다.</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = filtered.map(s => `
-                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                    <td class="p-4">${s.unitTitle}</td>
-                    <td class="p-4 text-center">${s.grade}학년 ${s.classNum}반</td>
-                    <td class="p-4 font-bold">${s.name} (${s.stuNum}번)</td>
+            const sorted = [...filtered].sort((a,b) => b.createdAt - a.createdAt);
+
+            tbody.innerHTML = sorted.map(s => `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                    <td class="p-4 text-slate-700">${s.unitTitle}</td>
+                    <td class="p-4 text-center text-slate-500">${s.grade}학년 ${s.classNum}반</td>
+                    <td class="p-4 font-bold">${s.name} <span class="text-xs font-normal text-slate-400 ml-1">(${s.stuNum}번)</span></td>
                     <td class="p-4 text-right font-bold text-primary">${s.score}</td>
                     <td class="p-4 text-center">
-                        <button onclick="deleteScoreRecord('${s.id}')" class="text-xs bg-red-100 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg font-bold">삭제</button>
+                        <button onclick="deleteScoreRecord('${s.id}')" class="text-xs bg-red-100 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg font-bold transition">삭제</button>
                     </td>
                 </tr>
             `).join('');
@@ -750,19 +778,42 @@
             const grade = document.getElementById('filter-score-grade').value;
             const classNum = document.getElementById('filter-score-class').value;
 
-            showConfirm("현재 필터링된 모든 기록을 삭제하시겠습니까?", async () => {
-                let filtered = state.scores;
-                if(unitId !== 'all') filtered = filtered.filter(s => s.unitId === unitId);
-                if(grade !== 'all') filtered = filtered.filter(s => s.grade === parseInt(grade));
-                if(classNum !== 'all') filtered = filtered.filter(s => s.classNum === parseInt(classNum));
+            let filtered = state.scores;
+            if(unitId !== 'all') filtered = filtered.filter(s => s.unitId === unitId);
+            if(grade !== 'all') filtered = filtered.filter(s => s.grade === parseInt(grade));
+            if(classNum !== 'all') filtered = filtered.filter(s => s.classNum === parseInt(classNum));
 
-                for(const s of filtered) {
-                    await deleteDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'scores', s.id));
+            if(filtered.length === 0) {
+                return showAlert("삭제할 기록이 없습니다.");
+            }
+
+            showConfirm(`현재 필터링된 ${filtered.length}개의 기록을 모두 삭제하시겠습니까?\n(복구할 수 없습니다.)`, async () => {
+                document.getElementById('loading-overlay').style.display = 'flex';
+                try {
+                    const deletePromises = filtered.map(s => deleteDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'scores', s.id)));
+                    await Promise.all(deletePromises);
+                    await window.fetchTeacherScores();
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    showAlert(`선택한 ${filtered.length}개의 기록이 모두 삭제되었습니다.`);
+                } catch(e) {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    showAlert("삭제 중 오류가 발생했습니다: " + e.message);
                 }
-                await fetchTeacherScores();
-                showAlert("선택한 모든 기록이 삭제되었습니다.");
             });
         }
+
+        window.deleteScoreRecord = function(id) {
+            showConfirm("이 학생의 기록을 삭제하시겠습니까?\n(복구할 수 없습니다.)", async () => {
+                try {
+                    await deleteDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'scores', id));
+                    await window.fetchTeacherScores();
+                    showAlert("기록이 삭제되었습니다.");
+                } catch(e) {
+                    showAlert("삭제 실패: " + e.message);
+                }
+            });
+        }
+
 
         // ====== 오답 자동 생성 로직 ======
         function generateAutoDistractors(word, count) {
