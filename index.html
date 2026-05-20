@@ -115,11 +115,11 @@
         </button>
     </nav>
 
-    <!-- 메인 컨테이너 (레이아웃 붕괴 완전 방지용 h-0 flex-grow 추가) -->
-    <main class="flex-grow h-0 w-full relative p-4 flex flex-col items-center justify-center">
+    <!-- 메인 컨테이너 (h-0 대신 flex-1 min-h-0을 사용하여 하위 요소들이 찌그러지지 않고 고정 높이를 유지하도록 개선) -->
+    <main class="flex-1 min-h-0 w-full relative p-4 flex flex-col items-center justify-center">
         
         <!-- 1. 심플한 홈 화면 -->
-        <div id="screen-home" class="screen active flex-col items-center justify-center w-full max-w-5xl text-center h-full">
+        <div id="screen-home" class="screen flex-1 flex-col items-center justify-center w-full max-w-5xl text-center h-full">
             <div id="home-school-title" class="bg-primary text-white px-8 py-2 rounded-full font-jua text-3xl mb-8 shadow-md inline-block">학교 정보 로딩중...</div>
             <i class="fas fa-search text-7xl text-primary mb-6 animate-bounce"></i>
             <h1 class="text-7xl font-jua text-slate-800 mb-4 tracking-wider">Counting Words</h1>
@@ -162,7 +162,7 @@
         </div>
 
         <!-- 2. 교사 모드 로그인 (비밀번호 확인) -->
-        <div id="screen-teacher_login" class="screen flex-col items-center justify-center w-full max-w-sm h-full">
+        <div id="screen-teacher_login" class="screen flex-1 flex-col items-center justify-center w-full max-w-sm h-full">
             <div class="bg-white rounded-3xl shadow-2xl p-10 w-full text-center border border-slate-100">
                 <i class="fas fa-lock text-6xl text-slate-600 mb-6"></i>
                 <h2 class="text-3xl font-jua text-slate-800 mb-2">교사 모드 접속</h2>
@@ -174,7 +174,7 @@
         </div>
 
         <!-- 3. 교사 모드 대시보드 화면 -->
-        <div id="screen-teacher" class="screen flex-col w-full max-w-5xl h-full">
+        <div id="screen-teacher" class="screen flex-1 flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col overflow-hidden relative">
                 
                 <!-- 탭 메뉴 -->
@@ -363,7 +363,7 @@
         </div>
 
         <!-- 5. 멀티플레이어 대기실 (대기 및 방 공유) -->
-        <div id="screen-multiplayer-lobby" class="screen flex-col w-full max-w-2xl h-full justify-center">
+        <div id="screen-multiplayer-lobby" class="screen flex-1 flex-col w-full max-w-2xl h-full justify-center">
             <div class="bg-white rounded-3xl shadow-2xl p-8 flex flex-col overflow-hidden border border-slate-100 max-h-[85vh]">
                 <div class="text-center border-b pb-6">
                     <span class="bg-accent/10 text-accent px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider" id="lobby-mode-tag">대결 대기실</span>
@@ -402,8 +402,8 @@
             </div>
         </div>
 
-        <!-- 6. 게임 화면 -->
-        <div id="screen-game" class="screen flex-col w-full h-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100">
+        <!-- 6. 게임 화면 (h-full 대신 flex-1을 주어 전체 세로 높이를 유동적으로 가득 채우도록 개선) -->
+        <div id="screen-game" class="screen flex-1 flex-col w-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100 min-h-[450px]">
             <!-- 상단 정보 -->
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
@@ -436,17 +436,16 @@
                 </div>
             </div>
 
-            <!-- 수정한 부분: 절대 배치 캔버스 구조로 레이아웃 높이 붕괴 원천 차단 (Bug 1 완벽 해결) -->
+            <!-- 절대 배치 캔버스 구조로 레이아웃 높이 붕괴 원천 차단 (Bug 1 완벽 해결) -->
             <div id="game-canvas" class="absolute inset-0 z-0">
                 <!-- 애니메이션 단어 추가 영역 -->
             </div>
 
             <!-- 컴팩트한 하단 정답 입력창 (녹색 테두리를 완벽히 정렬하여 삐져나오지 않도록 개선) -->
-            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
-                <div class="bg-white rounded-[28px] shadow-2xl p-6 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
-                    <p class="text-slate-700 font-jua mb-4 text-xl text-center">정답은 몇 개?</p>
-                    <div class="flex gap-2 w-full justify-center">
-                        <!-- 높이 h-12로 정적 고정하고, flex를 사용해 삐져나가지 않도록 완벽 가공 -->
+            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
+                <div class="bg-white rounded-[28px] shadow-2xl p-4 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
+                    <p class="text-slate-700 font-jua mb-2 text-lg text-center">정답은 몇 개?</p>
+                    <div class="flex gap-2 w-full justify-center items-center">
                         <input type="number" id="game-answer" class="w-24 h-12 rounded-xl border border-slate-200 text-center text-2xl font-bold outline-none focus:border-[#ff823a] focus:ring-2 focus:ring-[#ff823a]/20 bg-slate-50 transition" placeholder="숫자" onkeypress="if(event.key === 'Enter') submitAnswer()">
                         <button onclick="submitAnswer()" class="bg-[#ff823a] hover:bg-orange-600 text-white h-12 px-5 rounded-xl font-jua text-xl transition whitespace-nowrap shadow-md">확인</button>
                     </div>
@@ -555,7 +554,7 @@
         </div>
 
         <!-- 9. 명예의 전당 -->
-        <div id="screen-leaderboard" class="screen flex-col w-full max-w-5xl h-full">
+        <div id="screen-leaderboard" class="screen flex-1 flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
                     <h2 class="text-4xl font-jua text-amber-500"><i class="fas fa-trophy mr-3"></i>명예의 전당</h2>
@@ -611,7 +610,7 @@
         const state = {
             units: [],
             scores: [],
-            config: { schoolName: '카운팅워즈 학교', teacherPassword: '0000' },
+            config: { schoolName: '이의초등학교', teacherPassword: '0000' },
             currentUnit: null,
             studentInfo: null,
             db: null,
@@ -699,16 +698,26 @@
                 }
                 
                 onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        state.userId = user.uid;
-                        await fetchConfig(); // 환경설정 로드
-                        await fetchUnits();  // 단원 정보 로드
+                    try {
+                        if (user) {
+                            state.userId = user.uid;
+                            await fetchConfig(); // 환경설정 로드
+                            await fetchUnits();  // 단원 정보 로드
+                        }
+                    } catch (err) {
+                        console.error("인증 콜백 내 데이터 갱신 실패 (로컬 모드로 진행):", err);
+                        loadMockUnits();
+                        renderUnits();
+                        renderUnitOptions();
+                    } finally {
                         document.getElementById('loading-overlay').style.display = 'none';
                     }
                 });
             } catch (e) {
                 console.error("Firebase 초기화 에러:", e);
-                showAlert("데이터베이스 연결 실패!\n상세 에러: " + e.message);
+                loadMockUnits();
+                renderUnits();
+                renderUnitOptions();
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         }
@@ -784,7 +793,10 @@
 
         // ====== 교사 모드 (단원 관리) ======
         async function fetchUnits() {
-            if (!state.db) return;
+            if (!state.db) {
+                loadMockUnits();
+                return;
+            }
             try {
                 const unitsRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'units');
                 const snapshot = await getDocs(unitsRef);
@@ -794,13 +806,38 @@
                     state.units.push({ id: doc.id, ...doc.data() });
                 });
                 
-                state.units.sort((a, b) => b.createdAt - a.createdAt);
+                if (state.units.length === 0) {
+                    loadMockUnits(); // 데이터베이스가 비어있을 시 예외 복구용 모크 단원 로드
+                } else {
+                    state.units.sort((a, b) => b.createdAt - a.createdAt);
+                }
                 
                 renderUnits();
                 renderUnitOptions();
             } catch (e) {
                 console.error("단원 로드 실패:", e);
+                loadMockUnits();
+                renderUnits();
+                renderUnitOptions();
             }
+        }
+
+        // 예외 방지 및 빠른 테스트를 위한 로컬 모크 단원 탑재 로직
+        function loadMockUnits() {
+            state.units = [
+                {
+                    id: "mock-fruit",
+                    title: "로컬 기본 단원 (과일)",
+                    targets: ["apple", "banana", "orange", "grape", "watermelon"],
+                    createdAt: Date.now()
+                },
+                {
+                    id: "mock-animal",
+                    title: "로컬 기본 단원 (동물)",
+                    targets: ["lion", "tiger", "bear", "fox", "rabbit"],
+                    createdAt: Date.now()
+                }
+            ];
         }
 
         window.saveUnit = async function() {
@@ -1185,7 +1222,7 @@
                     classNum: Number(classNum),
                     stuNum: Number(stuNum),
                     isHost: false,
-                    team: 'red', // 단체전 밸런싱을 위해 디폴트 홍팀 설정
+                    team: 'red', // 단체전 밸싱을 위해 디폴트 홍팀 설정
                     score: 0
                 };
 
@@ -1440,8 +1477,8 @@
                 name: name 
             };
             
-            // 단원의 모든 단어를 무작위로 섞어서 게임 문제 목록으로 설정
-            const targetsArray = (state.currentUnit.targets && state.currentUnit.targets.length > 0) 
+            // 단원의 모든 단어를 무작위로 섞어서 게임 문제 목록으로 설정 (문자열 타입 예외 체크 추가)
+            const targetsArray = (state.currentUnit.targets && Array.isArray(state.currentUnit.targets) && state.currentUnit.targets.length > 0) 
                 ? state.currentUnit.targets 
                 : (state.currentUnit.target ? [state.currentUnit.target] : ["단어"]);
                 
