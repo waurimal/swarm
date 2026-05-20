@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counting Words Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #bc84ee;
+            --secondary: #dcfd8b;
+            --accent: #ff823a;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+        * { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+        body { margin: 0; padding: 0; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            max-height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screen States */
+        .screen { display: none; width: 100%; height: 100%; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
+        .screen.active { display: flex; }
+
+        h1, h2 { font-family: 'Jua', sans-serif; color: var(--primary); margin-bottom: 20px; }
+        h1 { font-size: 3rem; text-align: center; }
+
+        /* Form Styles */
+        .form-group { width: 100%; max-width: 400px; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text); }
+        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        .btn { padding: 15px 30px; background-color: var(--secondary); color: var(--text); border: none; border-radius: 10px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Jua', sans-serif; margin-top: 10px; }
+        .btn:hover { background-color: #c5ef61; transform: translateY(-2px); }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: #a361e2; }
+
+        /* Game Area */
+        .game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; }
+        #word-canvas { flex-grow: 1; width: 100%; position: relative; background-color: #f1f5f9; border-radius: 15px; border: 2px dashed #cbd5e1; overflow: hidden; margin-bottom: 20px; }
+        .scattered-word { position: absolute; font-family: 'Jua', sans-serif; font-size: 1.5rem; user-select: none; }
+        .target-word-display { font-size: 4rem; color: var(--accent); font-family: 'Jua', sans-serif; text-align: center; }
+        
+        .answer-area { display: flex; gap: 10px; width: 100%; max-width: 300px; }
+        .answer-area input { text-align: center; font-size: 1.5rem; }
+
+        #toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 100; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="toast">알림 메시지</div>
+
+    <!-- 1. 정보 입력 화면 (Setup Screen) -->
+    <div id="screen-setup" class="screen active">
+        <h1>Counting Words</h1>
+        <div class="form-group">
+            <label for="school">학교명 (선생님이 등록한 학교)</label>
+            <select id="school">
+                <option value="test_school">테스트 초등학교</option>
+                <!-- Firebase에서 불러온 학교 목록이 여기에 추가됩니다 -->
+            </select>
+        </div>
+        <div class="form-group" style="display: flex; gap: 10px;">
+            <div style="flex: 1;"><label for="grade">학년</label><input type="number" id="grade" min="1" max="6" value="1"></div>
+            <div style="flex: 1;"><label for="classNum">반</label><input type="number" id="classNum" min="1" value="1"></div>
+            <div style="flex: 1;"><label for="studentNum">번호</label><input type="number" id="studentNum" min="1" value="1"></div>
+        </div>
+        <div class="form-group">
+            <label for="playerName">이름</label>
+            <input type="text" id="playerName" placeholder="홍길동">
+        </div>
+        <div class="form-group">
+            <label for="gameMode">게임 모드</label>
+            <select id="gameMode">
+                <option value="solo">1인 플레이</option>
+                <option value="1v1">1:1 배틀</option>
+                <option value="team">단체전</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="startGame()">게임 시작하기</button>
+    </div>
+
+    <!-- 2. 목표 단어 제시 화면 (Ready Screen) -->
+    <div id="screen-ready" class="screen">
+        <h2>이번에 찾을 단어는...</h2>
+        <div class="target-word-display" id="target-word">hello</div>
+        <p style="margin-top: 30px; font-size: 1.2rem;">잘 기억하세요!</p>
+        <button class="btn" onclick="startCounting()" style="margin-top: 20px;">시작!</button>
+    </div>
+
+    <!-- 3. 게임 플레이 화면 (Game Screen) -->
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <div>점수: <span id="score">0</span>점</div>
+            <div>진행도: <span id="round">1</span>/5</div>
+        </div>
+        <div id="word-canvas"></div>
+        <div class="answer-area">
+            <input type="number" id="answer-input" placeholder="몇 개일까요?">
+            <button class="btn btn-primary" onclick="submitAnswer()" style="margin: 0;">정답!</button>
+        </div>
+    </div>
+
+    <!-- 4. 결과 화면 (Result Screen) -->
+    <div id="screen-result" class="screen">
+        <h1>게임 종료!</h1>
+        <h2 style="font-size: 4rem; color: var(--accent);"><span id="final-score">0</span>점</h2>
+        <p id="save-status">결과를 서버에 저장하는 중...</p>
+        <button class="btn" onclick="location.reload()" style="margin-top: 30px;">다시 하기</button>
+    </div>
+</div>
+
+<!-- Firebase Modular SDK -->
+<script type="module">
+    // ?? 여기에 본인의 Firebase 프로젝트 설정값을 입력하세요!
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Firebase 초기화 (설정값이 없으면 에러가 나므로 try-catch 처리)
+    let db;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        loadSchools(); // 선생님이 등록한 학교 목록 불러오기
+    } catch (e) {
+        console.warn("Firebase가 설정되지 않았습니다. 로컬 테스트 모드로 실행합니다.");
+    }
+
+    // 선생님이 세팅한 학교 목록 불러오기 (Firestore 'schools' 컬렉션)
+    async function loadSchools() {
+        if (!db) return;
+        try {
+            const querySnapshot = await getDocs(collection(db, "schools"));
+            const schoolSelect = document.getElementById("school");
+            querySnapshot.forEach((doc) => {
+                const option = document.createElement("option");
+                option.value = doc.data().name;
+                option.text = doc.data().name;
+                schoolSelect.appendChild(option);
+            });
+        } catch (e) {
+            console.error("학교 목록 불러오기 실패:", e);
+        }
+    }
+
+    // 결과를 Firebase에 저장하는 함수 (전역 사용을 위해 window에 등록)
+    window.saveResultToFirebase = async function(playerData) {
+        if (!db) {
+            document.getElementById("save-status").innerText = "오프라인 모드: 점수가 저장되지 않았습니다.";
+            return;
+        }
+        try {
+            await addDoc(collection(db, "game_results"), {
+                ...playerData,
+                timestamp: new Date()
+            });
+            document.getElementById("save-status").innerText = "점수가 서버에 성공적으로 저장되었습니다! ??";
+        } catch (e) {
+            console.error("점수 저장 실패:", e);
+            document.getElementById("save-status").innerText = "점수 저장에 실패했습니다.";
+        }
+    }
+</script>
+
+<!-- 게임 로직 스크립트 -->
+<script>
+    // 게임 데이터 세트 (목표 단어, 함정 단어들, 최소/최대 생성 개수)
+    const gameLevels = [
+        { target: "hello", distractors: ["hallo", "helo", "holle", "hellp"], minCorrect: 4, maxCorrect: 7 },
+        { target: "lunch", distractors: ["lunich", "lanch", "luch", "runch"], minCorrect: 3, maxCorrect: 6 },
+        { target: "delicious", distractors: ["delicous", "delicius", "dilicious"], minCorrect: 5, maxCorrect: 8 },
+        { target: "space", distractors: ["spase", "spece", "shace"], minCorrect: 4, maxCorrect: 9 },
+        { target: "homework", distractors: ["homewark", "honework", "homwork"], minCorrect: 5, maxCorrect: 8 }
+    ];
+
+    let currentRound = 0;
+    let score = 0;
+    let currentCorrectCount = 0;
+    let playerData = {};
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.innerText = msg;
+        toast.style.display = "block";
+        setTimeout(() => toast.style.display = "none", 2000);
+    }
+
+    function startGame() {
+        const name = document.getElementById("playerName").value.trim();
+        if(!name) return showToast("이름을 입력해주세요!");
+
+        // 유저 정보 저장
+        playerData = {
+            school: document.getElementById("school").value,
+            grade: document.getElementById("grade").value,
+            classNum: document.getElementById("classNum").value,
+            studentNum: document.getElementById("studentNum").value,
+            name: name,
+            mode: document.getElementById("gameMode").value
+        };
+
+        currentRound = 0;
+        score = 0;
+        nextRound();
+    }
+
+    function nextRound() {
+        if (currentRound >= gameLevels.length) {
+            endGame();
+            return;
+        }
+        
+        const levelData = gameLevels[currentRound];
+        document.getElementById("target-word").innerText = levelData.target;
+        document.getElementById("round").innerText = currentRound + 1;
+        document.getElementById("score").innerText = score;
+        document.getElementById("answer-input").value = "";
+        
+        showScreen("screen-ready");
+    }
+
+    function startCounting() {
+        showScreen("screen-game");
+        generateWordsOnCanvas();
+    }
+
+    function generateWordsOnCanvas() {
+        const canvas = document.getElementById("word-canvas");
+        canvas.innerHTML = ""; // 초기화
+        
+        const levelData = gameLevels[currentRound];
+        
+        // 정답 개수 랜덤 지정
+        currentCorrectCount = Math.floor(Math.random() * (levelData.maxCorrect - levelData.minCorrect + 1)) + levelData.minCorrect;
+        
+        // 오답(함정) 개수 지정 (정답 개수의 1.5배 정도)
+        const distractorCount = Math.floor(currentCorrectCount * 1.5);
+
+        let wordsToRender = [];
+        for(let i=0; i<currentCorrectCount; i++) wordsToRender.push({ text: levelData.target, isCorrect: true });
+        for(let i=0; i<distractorCount; i++) {
+            const randomDistractor = levelData.distractors[Math.floor(Math.random() * levelData.distractors.length)];
+            wordsToRender.push({ text: randomDistractor, isCorrect: false });
+        }
+
+        // 배열 섞기
+        wordsToRender.sort(() => Math.random() - 0.5);
+
+        // 화면에 뿌리기
+        const colors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
+        const canvasRect = canvas.getBoundingClientRect();
+
+        wordsToRender.forEach(wordObj => {
+            const span = document.createElement("span");
+            span.className = "scattered-word";
+            span.innerText = wordObj.text;
+            
+            // 랜덤 위치 (화면 밖으로 나가지 않도록 마진 10%~85% 지정)
+            const top = Math.random() * 75 + 10; 
+            const left = Math.random() * 75 + 10;
+            const rotation = Math.random() * 60 - 30; // -30도 ~ 30도 회전
+            
+            span.style.top = `${top}%`;
+            span.style.left = `${left}%`;
+            span.style.transform = `rotate(${rotation}deg)`;
+            span.style.color = colors[Math.floor(Math.random() * colors.length)];
+            // 오답인 경우 폰트를 약간 다르게 섞어 혼동 주기
+            if(Math.random() > 0.5) span.style.fontWeight = "bold";
+
+            canvas.appendChild(span);
+        });
+    }
+
+    function submitAnswer() {
+        const userAnswer = parseInt(document.getElementById("answer-input").value);
+        if(isNaN(userAnswer)) return showToast("숫자를 입력해주세요!");
+
+        if(userAnswer === currentCorrectCount) {
+            // 정답을 맞추면 찾은 개수만큼 점수 부여 (PPT 룰)
+            score += currentCorrectCount;
+            showToast(`정답입니다! +${currentCorrectCount}점`);
+        } else {
+            showToast(`틀렸습니다! 정답은 ${currentCorrectCount}개 였습니다.`);
+        }
+
+        currentRound++;
+        setTimeout(nextRound, 1500); // 1.5초 후 다음 라운드 진행
+    }
+
+    function endGame() {
+        showScreen("screen-result");
+        document.getElementById("final-score").innerText = score;
+        
+        playerData.score = score;
+        
+        // Firebase 저장 호출 (위의 module 스크립트에서 선언된 함수)
+        if(typeof window.saveResultToFirebase === "function") {
+            window.saveResultToFirebase(playerData);
+        }
+    }
+</script>
+
+</body>
+</html>
