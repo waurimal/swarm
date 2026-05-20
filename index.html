@@ -38,32 +38,32 @@
         
         /* 단어 날아가는 애니메이션 키프레임 (vw를 사용하여 기기에 상관없이 완벽하게 화면을 가로지르도록 수정) */
         @keyframes flyRight {
-            0% { left: -100vw; transform: scale(0.9) translateY(10px) rotate(-5deg); opacity: 0; }
-            5% { opacity: 1; }
-            95% { opacity: 1; }
-            100% { left: 100vw; transform: scale(1.1) translateY(-10px) rotate(5deg); opacity: 0; }
+            0% { left: -50vw; transform: scale(0.9) translateY(10px) rotate(-5deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 120vw; transform: scale(1.1) translateY(-10px) rotate(5deg); opacity: 0; }
         }
         @keyframes flyLeft {
-            0% { left: 100vw; transform: scale(1.1) translateY(10px) rotate(5deg); opacity: 0; }
-            5% { opacity: 1; }
-            95% { opacity: 1; }
-            100% { left: -100vw; transform: scale(0.9) translateY(-10px) rotate(-5deg); opacity: 0; }
+            0% { left: 120vw; transform: scale(1.1) translateY(10px) rotate(5deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: -50vw; transform: scale(0.9) translateY(-10px) rotate(-5deg); opacity: 0; }
         }
 
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            /* 모바일에서는 5rem, PC에서는 최대 12rem까지 커지도록 유동적 대왕 사이즈 적용 */
-            font-size: clamp(5rem, 12vw, 12rem); 
+            /* 모바일에서는 5rem, PC에서는 최대 15rem까지 커지도록 유동적 대왕 사이즈 적용 */
+            font-size: clamp(5rem, 15vw, 15rem); 
             white-space: nowrap;
             user-select: none;
             /* 배경색과 분리되도록 강력한 테두리 및 그림자 효과 */
             text-shadow: 
-                4px 4px 0px #fff, -4px -4px 0px #fff, 
-                4px -4px 0px #fff, -4px 4px 0px #fff,
-                0px 4px 0px #fff, 0px -4px 0px #fff,
-                4px 0px 0px #fff, -4px 0px 0px #fff,
-                8px 8px 15px rgba(0,0,0,0.2);
+                6px 6px 0px #fff, -6px -6px 0px #fff, 
+                6px -6px 0px #fff, -6px 6px 0px #fff,
+                0px 6px 0px #fff, 0px -6px 0px #fff,
+                6px 0px 0px #fff, -6px 0px 0px #fff,
+                8px 8px 15px rgba(0,0,0,0.15);
             opacity: 0;
             z-index: 10;
             pointer-events: none;
@@ -80,9 +80,10 @@
 <body class="h-screen flex flex-col font-sans text-slate-800">
 
     <!-- 글로벌 로딩 오버레이 -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center">
-        <i class="fas fa-spinner fa-spin text-5xl text-primary mb-4"></i>
-        <p class="text-xl font-jua text-slate-600">서버 연결 중...</p>
+    <div id="loading-overlay" class="fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
+        <i class="fas fa-spinner fa-spin text-6xl text-primary mb-6"></i>
+        <p class="text-2xl font-jua text-slate-600">앱을 준비하고 있습니다...</p>
+        <p class="text-sm font-bold text-slate-400 mt-2">잠시만 기다려주세요</p>
     </div>
 
     <!-- 커스텀 알림(Alert) 모달 -->
@@ -121,7 +122,7 @@
     <main class="flex-1 min-h-0 w-full relative p-4 flex flex-col items-center justify-center">
         
         <!-- 1. 심플한 홈 화면 -->
-        <div id="screen-home" class="screen flex-1 flex-col items-center justify-center w-full max-w-5xl text-center h-full">
+        <div id="screen-home" class="screen active flex-1 flex-col items-center justify-center w-full max-w-5xl text-center h-full">
             <div id="home-school-title" class="bg-primary text-white px-8 py-2 rounded-full font-jua text-3xl mb-8 shadow-md inline-block">학교 정보 로딩중...</div>
             <i class="fas fa-search text-7xl text-primary mb-6 animate-bounce"></i>
             <h1 class="text-7xl font-jua text-slate-800 mb-4 tracking-wider">Counting Words</h1>
@@ -422,7 +423,7 @@
                 <!-- 애니메이션 단어 추가 영역 -->
             </div>
 
-            <!-- 하단 정답 입력창 -->
+            <!-- 컴팩트한 하단 정답 입력창 -->
             <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
                 <div class="bg-white rounded-[28px] shadow-2xl p-4 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
                     <p class="text-slate-700 font-jua mb-2 text-lg text-center">정답은 몇 개?</p>
@@ -446,7 +447,9 @@
                     <div id="result-score" class="text-7xl font-jua text-primary mt-2">100</div>
                 </div>
 
-                <div id="result-buttons" class="flex gap-4 w-full"></div>
+                <div id="result-buttons" class="flex gap-4 w-full">
+                    <!-- JS 렌더링 -->
+                </div>
             </div>
         </div>
 
@@ -635,6 +638,19 @@
         };
 
         async function initFirebase() {
+            let isLoaded = false;
+            
+            // 3초 후 강제로 로딩창 없애고 기본 모드(로컬)로 진입 (네트워크 에러/무한로딩 방어막)
+            const fallbackTimer = setTimeout(() => {
+                if (!isLoaded) {
+                    console.warn("네트워크 지연. 로컬 기본 모드로 실행합니다.");
+                    loadMockUnits();
+                    renderUnits();
+                    renderUnitOptions();
+                    document.getElementById('loading-overlay').style.display = 'none';
+                }
+            }, 3000);
+
             try {
                 const firebaseConfig = {
                     apiKey: "AIzaSyBM_93jHRAwHuxFYMlHpa7kqAVp0u2v7U0",
@@ -657,6 +673,8 @@
                 }
                 
                 onAuthStateChanged(auth, async (user) => {
+                    isLoaded = true;
+                    clearTimeout(fallbackTimer);
                     try {
                         if (user) {
                             state.userId = user.uid;
@@ -664,7 +682,7 @@
                             await fetchUnits();
                         }
                     } catch (err) {
-                        console.error("인증 실패, 기본 모드 진행:", err);
+                        console.error("인증 실패, 로컬 기본 모드 진행:", err);
                         loadMockUnits();
                         renderUnits();
                         renderUnitOptions();
@@ -673,6 +691,8 @@
                     }
                 });
             } catch (e) {
+                isLoaded = true;
+                clearTimeout(fallbackTimer);
                 console.error("Firebase 초기화 에러:", e);
                 loadMockUnits();
                 renderUnits();
@@ -1243,7 +1263,7 @@
             
             navigate('game');
             
-            // 핵심 렌더링 딜레이 보장 - Reflow가 끝난 후 애니메이션 적용
+            // 핵심: Reflow 이후 확실하게 단어가 보이도록 지연 후 실행 (Bug 1 완벽 해결 트리거)
             setTimeout(() => {
                 startGameAnimation();
             }, 50);
@@ -1272,10 +1292,11 @@
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                const topPercent = Math.random() * 40 + 10; // 상단 10~50% 내에만 표출
+                // 스폰 높이를 화면 중앙부위 10%~60% 안으로 단단히 제한해 하단 입력창을 덮지 않음
+                const topPercent = Math.random() * 50 + 10; 
                 const duration = Math.random() * addDur + minDur; 
                 
-                // 단어 등장 딜레이를 분산 (첫 단어는 거의 즉시 0~0.3초 이내 출발)
+                // 단어 등장 딜레이를 분산시켜 너무 오래 텅 비어있지 않고 즉시 즉시 나오게 조정
                 const delay = (index * 0.4) + (Math.random() * 0.3);
                 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
@@ -1284,7 +1305,7 @@
                 el.style.top = `${topPercent}%`;
                 el.style.color = color;
                 
-                // 요소 강제 리플로우 (애니메이션 갱신 보장)
+                // 요소 강제 리플로우
                 void el.offsetWidth;
                 
                 el.style.animation = `${direction} ${duration}s linear ${delay}s forwards`;
@@ -1443,7 +1464,8 @@
             }).join('');
         }
 
-        window.onload = initFirebase;
+        // 스크립트가 파싱되자마자 실행 보장
+        initFirebase();
     </script>
 </body>
 </html>
