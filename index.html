@@ -1,333 +1,633 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Counting Words Game</title>
-    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <title>Counting Words 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        jua: ['Jua', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#bc84ee',
+                        secondary: '#dcfd8b',
+                        accent: '#ff823a',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #bc84ee;
-            --secondary: #dcfd8b;
-            --accent: #ff823a;
-            --bg: #f8fafc;
-            --text: #1e293b;
+        body {
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
-        * { box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
-        body { margin: 0; padding: 0; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        .screen { display: none; }
+        .screen.active { display: block; }
         
-        .app-container {
-            width: 100%;
-            max-width: 800px;
-            height: 100vh;
-            max-height: 600px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+        /* 단어 날아가는 애니메이션 키프레임 */
+        @keyframes flyRight {
+            0% { left: -30%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 130%; transform: scale(1.2) rotate(10deg); opacity: 0; }
+        }
+        @keyframes flyLeft {
+            0% { left: 130%; transform: scale(1.2) rotate(10deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: -30%; transform: scale(0.8) rotate(-10deg); opacity: 0; }
         }
 
-        /* Screen States */
-        .screen { display: none; width: 100%; height: 100%; padding: 40px; flex-direction: column; align-items: center; justify-content: center; }
-        .screen.active { display: flex; }
+        .flying-word {
+            position: absolute;
+            font-family: 'Jua', sans-serif;
+            font-size: 2.5rem;
+            white-space: nowrap;
+            user-select: none;
+            text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
+            opacity: 0; /* 초기엔 숨김 */
+        }
 
-        h1, h2 { font-family: 'Jua', sans-serif; color: var(--primary); margin-bottom: 20px; }
-        h1 { font-size: 3rem; text-align: center; }
-
-        /* Form Styles */
-        .form-group { width: 100%; max-width: 400px; margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text); }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
-        
-        .btn { padding: 15px 30px; background-color: var(--secondary); color: var(--text); border: none; border-radius: 10px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: 'Jua', sans-serif; margin-top: 10px; }
-        .btn:hover { background-color: #c5ef61; transform: translateY(-2px); }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: #a361e2; }
-
-        /* Game Area */
-        .game-header { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; }
-        #word-canvas { flex-grow: 1; width: 100%; position: relative; background-color: #f1f5f9; border-radius: 15px; border: 2px dashed #cbd5e1; overflow: hidden; margin-bottom: 20px; }
-        .scattered-word { position: absolute; font-family: 'Jua', sans-serif; font-size: 1.5rem; user-select: none; }
-        .target-word-display { font-size: 4rem; color: var(--accent); font-family: 'Jua', sans-serif; text-align: center; }
-        
-        .answer-area { display: flex; gap: 10px; width: 100%; max-width: 300px; }
-        .answer-area input { text-align: center; font-size: 1.5rem; }
-
-        #toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 100; }
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #bc84ee; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a361e2; }
     </style>
 </head>
-<body>
+<body class="h-screen flex flex-col font-sans text-slate-800">
 
-<div class="app-container">
-    <div id="toast">알림 메시지</div>
-
-    <!-- 1. 정보 입력 화면 (Setup Screen) -->
-    <div id="screen-setup" class="screen active">
-        <h1>Counting Words</h1>
-        <div class="form-group">
-            <label for="school">학교명 (선생님이 등록한 학교)</label>
-            <select id="school">
-                <option value="test_school">테스트 초등학교</option>
-                <!-- Firebase에서 불러온 학교 목록이 여기에 추가됩니다 -->
-            </select>
-        </div>
-        <div class="form-group" style="display: flex; gap: 10px;">
-            <div style="flex: 1;"><label for="grade">학년</label><input type="number" id="grade" min="1" max="6" value="1"></div>
-            <div style="flex: 1;"><label for="classNum">반</label><input type="number" id="classNum" min="1" value="1"></div>
-            <div style="flex: 1;"><label for="studentNum">번호</label><input type="number" id="studentNum" min="1" value="1"></div>
-        </div>
-        <div class="form-group">
-            <label for="playerName">이름</label>
-            <input type="text" id="playerName" placeholder="홍길동">
-        </div>
-        <div class="form-group">
-            <label for="gameMode">게임 모드</label>
-            <select id="gameMode">
-                <option value="solo">1인 플레이</option>
-                <option value="1v1">1:1 배틀</option>
-                <option value="team">단체전</option>
-            </select>
-        </div>
-        <button class="btn btn-primary" onclick="startGame()">게임 시작하기</button>
+    <!-- 글로벌 로딩 오버레이 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 z-50 flex flex-col items-center justify-center">
+        <i class="fas fa-spinner fa-spin text-5xl text-primary mb-4"></i>
+        <p class="text-xl font-jua text-slate-600">서버 연결 중...</p>
     </div>
 
-    <!-- 2. 목표 단어 제시 화면 (Ready Screen) -->
-    <div id="screen-ready" class="screen">
-        <h2>이번에 찾을 단어는...</h2>
-        <div class="target-word-display" id="target-word">hello</div>
-        <p style="margin-top: 30px; font-size: 1.2rem;">잘 기억하세요!</p>
-        <button class="btn" onclick="startCounting()" style="margin-top: 20px;">시작!</button>
-    </div>
-
-    <!-- 3. 게임 플레이 화면 (Game Screen) -->
-    <div id="screen-game" class="screen">
-        <div class="game-header">
-            <div>점수: <span id="score">0</span>점</div>
-            <div>진행도: <span id="round">1</span>/5</div>
+    <!-- 네비게이션 바 -->
+    <nav class="bg-white shadow-sm p-4 px-6 flex justify-between items-center z-10">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
+            <i class="fas fa-bug text-primary text-3xl"></i>
+            <h1 class="text-2xl font-jua text-primary tracking-wide pt-1">Counting Words</h1>
         </div>
-        <div id="word-canvas"></div>
-        <div class="answer-area">
-            <input type="number" id="answer-input" placeholder="몇 개일까요?">
-            <button class="btn btn-primary" onclick="submitAnswer()" style="margin: 0;">정답!</button>
+        <div class="flex gap-2">
+            <button onclick="navigate('home')" class="px-4 py-2 rounded-lg hover:bg-slate-100 font-medium transition"><i class="fas fa-home mr-1"></i> 홈</button>
+            <button onclick="navigate('teacher')" class="px-4 py-2 rounded-lg hover:bg-slate-100 font-medium text-slate-600 transition"><i class="fas fa-chalkboard-teacher mr-1"></i> 교사 모드</button>
+            <button onclick="navigate('leaderboard')" class="px-4 py-2 rounded-lg hover:bg-slate-100 font-medium text-amber-600 transition"><i class="fas fa-trophy mr-1"></i> 명예의 전당</button>
         </div>
-    </div>
+    </nav>
 
-    <!-- 4. 결과 화면 (Result Screen) -->
-    <div id="screen-result" class="screen">
-        <h1>게임 종료!</h1>
-        <h2 style="font-size: 4rem; color: var(--accent);"><span id="final-score">0</span>점</h2>
-        <p id="save-status">결과를 서버에 저장하는 중...</p>
-        <button class="btn" onclick="location.reload()" style="margin-top: 30px;">다시 하기</button>
-    </div>
-</div>
+    <!-- 메인 컨테이너 -->
+    <main class="flex-grow relative overflow-hidden flex justify-center items-center p-4">
+        
+        <!-- 1. 홈 화면 -->
+        <div id="screen-home" class="screen active w-full max-w-4xl text-center">
+            <h2 class="text-5xl font-jua text-slate-800 mb-6">숨은 단어를 찾아라!</h2>
+            <p class="text-lg text-slate-500 mb-10">좌우에서 날아오는 단어들 중 <span class="text-accent font-bold">정답 단어</span>가 몇 개인지 세어보세요.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <button onclick="navigate('student_setup')" class="bg-primary hover:bg-purple-500 text-white p-8 rounded-3xl shadow-lg transform transition hover:-translate-y-2 flex flex-col items-center">
+                    <i class="fas fa-gamepad text-6xl mb-4"></i>
+                    <span class="text-2xl font-jua">게임 시작하기 (학생)</span>
+                </button>
+                <button onclick="navigate('leaderboard')" class="bg-secondary hover:bg-[#c9f567] text-slate-800 p-8 rounded-3xl shadow-lg transform transition hover:-translate-y-2 flex flex-col items-center">
+                    <i class="fas fa-crown text-6xl mb-4 text-amber-500"></i>
+                    <span class="text-2xl font-jua">명예의 전당</span>
+                </button>
+            </div>
+        </div>
 
-<!-- Firebase Modular SDK -->
-<script type="module">
-    // ?? 여기에 본인의 Firebase 프로젝트 설정값을 입력하세요!
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        <!-- 2. 교사 모드 화면 -->
+        <div id="screen-teacher" class="screen w-full max-w-5xl h-full flex flex-col">
+            <div class="bg-white rounded-2xl shadow-sm p-6 flex-grow flex flex-col mb-4 overflow-hidden">
+                <h2 class="text-3xl font-jua text-primary mb-6 border-b pb-4"><i class="fas fa-cog mr-2"></i>단원 및 단어 설정 (교사 전용)</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow overflow-hidden">
+                    <!-- 입력 폼 -->
+                    <div class="col-span-1 bg-slate-50 p-5 rounded-xl border border-slate-200 overflow-y-auto">
+                        <h3 class="text-xl font-bold mb-4 text-slate-700">새 단원 추가</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold mb-1 text-slate-600">단원명 (예: 1단원. 과일)</label>
+                                <input type="text" id="unit-title" class="w-full p-3 rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" placeholder="단원명을 입력하세요">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-1 text-accent">찾을 단어 (정답)</label>
+                                <input type="text" id="unit-target" class="w-full p-3 rounded-lg border border-slate-300 focus:border-accent outline-none" placeholder="예: apple">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-1 text-slate-600">오답 단어 (쉼표로 구분)</label>
+                                <textarea id="unit-distractors" rows="3" class="w-full p-3 rounded-lg border border-slate-300 outline-none" placeholder="예: aple, appel, banana"></textarea>
+                                <p class="text-xs text-slate-400 mt-1">비슷하게 생긴 단어를 넣으면 더 재미있습니다.</p>
+                            </div>
+                            <button onclick="saveUnit()" class="w-full py-3 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition">단원 저장하기</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 리스트 뷰 -->
+                    <div class="col-span-2 flex flex-col h-full">
+                        <h3 class="text-xl font-bold mb-4 text-slate-700">등록된 단원 목록</h3>
+                        <div class="overflow-y-auto flex-grow pr-2 space-y-3" id="unit-list">
+                            <!-- JS로 렌더링 됨 -->
+                            <div class="text-center text-slate-400 py-10">등록된 단원이 없습니다.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
+        <!-- 3. 학생 설정 화면 -->
+        <div id="screen-student_setup" class="screen w-full max-w-lg">
+            <div class="bg-white rounded-3xl shadow-xl p-8">
+                <h2 class="text-3xl font-jua text-center text-slate-800 mb-8">내 정보 입력</h2>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
+                        <select id="student-unit" class="w-full p-3 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg">
+                            <option value="">단원을 선택해주세요</option>
+                            <!-- JS 렌더링 -->
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">학년</label>
+                            <input type="number" id="student-grade" min="1" max="6" value="1" class="w-full p-3 rounded-xl border-2 border-slate-200 text-center outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">반</label>
+                            <input type="number" id="student-class" min="1" value="1" class="w-full p-3 rounded-xl border-2 border-slate-200 text-center outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-slate-600">번호</label>
+                            <input type="number" id="student-num" min="1" value="1" class="w-full p-3 rounded-xl border-2 border-slate-200 text-center outline-none">
+                        </div>
+                    </div>
 
-    // Firebase 초기화 (설정값이 없으면 에러가 나므로 try-catch 처리)
-    let db;
-    try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        loadSchools(); // 선생님이 등록한 학교 목록 불러오기
-    } catch (e) {
-        console.warn("Firebase가 설정되지 않았습니다. 로컬 테스트 모드로 실행합니다.");
-    }
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-slate-600">이름</label>
+                        <input type="text" id="student-name" placeholder="이름을 입력하세요" class="w-full p-3 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg">
+                    </div>
 
-    // 선생님이 세팅한 학교 목록 불러오기 (Firestore 'schools' 컬렉션)
-    async function loadSchools() {
-        if (!db) return;
-        try {
-            const querySnapshot = await getDocs(collection(db, "schools"));
-            const schoolSelect = document.getElementById("school");
-            querySnapshot.forEach((doc) => {
-                const option = document.createElement("option");
-                option.value = doc.data().name;
-                option.text = doc.data().name;
-                schoolSelect.appendChild(option);
-            });
-        } catch (e) {
-            console.error("학교 목록 불러오기 실패:", e);
-        }
-    }
+                    <button onclick="prepareGame()" class="w-full py-4 mt-4 bg-primary text-white rounded-xl font-jua text-2xl hover:bg-purple-500 transition shadow-md">준비 완료!</button>
+                </div>
+            </div>
+        </div>
 
-    // 결과를 Firebase에 저장하는 함수 (전역 사용을 위해 window에 등록)
-    window.saveResultToFirebase = async function(playerData) {
-        if (!db) {
-            document.getElementById("save-status").innerText = "오프라인 모드: 점수가 저장되지 않았습니다.";
-            return;
-        }
-        try {
-            await addDoc(collection(db, "game_results"), {
-                ...playerData,
-                timestamp: new Date()
-            });
-            document.getElementById("save-status").innerText = "점수가 서버에 성공적으로 저장되었습니다! ??";
-        } catch (e) {
-            console.error("점수 저장 실패:", e);
-            document.getElementById("save-status").innerText = "점수 저장에 실패했습니다.";
-        }
-    }
-</script>
+        <!-- 4. 게임 화면 -->
+        <div id="screen-game" class="screen w-full h-full flex flex-col relative overflow-hidden">
+            <!-- 상단 정보 -->
+            <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-20 pointer-events-none">
+                <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-sm border border-slate-100 pointer-events-auto">
+                    <span class="text-slate-500 font-bold mr-2">목표 단어:</span>
+                    <span id="game-target-word" class="text-3xl font-jua text-accent">word</span>
+                </div>
+                <div class="bg-slate-800 text-white px-6 py-2 rounded-full shadow-sm font-jua text-xl pointer-events-auto">
+                    단어들이 날아갑니다!
+                </div>
+            </div>
 
-<!-- 게임 로직 스크립트 -->
-<script>
-    // 게임 데이터 세트 (목표 단어, 함정 단어들, 최소/최대 생성 개수)
-    const gameLevels = [
-        { target: "hello", distractors: ["hallo", "helo", "holle", "hellp"], minCorrect: 4, maxCorrect: 7 },
-        { target: "lunch", distractors: ["lunich", "lanch", "luch", "runch"], minCorrect: 3, maxCorrect: 6 },
-        { target: "delicious", distractors: ["delicous", "delicius", "dilicious"], minCorrect: 5, maxCorrect: 8 },
-        { target: "space", distractors: ["spase", "spece", "shace"], minCorrect: 4, maxCorrect: 9 },
-        { target: "homework", distractors: ["homewark", "honework", "homwork"], minCorrect: 5, maxCorrect: 8 }
-    ];
+            <!-- 단어가 날아다니는 캔버스 -->
+            <div id="game-canvas" class="flex-grow w-full h-full relative z-0">
+                <!-- 애니메이션 요소들이 여기에 추가됨 -->
+            </div>
 
-    let currentRound = 0;
-    let score = 0;
-    let currentCorrectCount = 0;
-    let playerData = {};
+            <!-- 하단 정답 입력창 -->
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-md px-4">
+                <div class="bg-white rounded-2xl shadow-2xl p-6 border-4 border-secondary flex flex-col items-center">
+                    <p class="text-slate-600 font-bold mb-3 text-lg text-center">정답 단어가 몇 개 지나갔나요?</p>
+                    <div class="flex gap-3 w-full">
+                        <input type="number" id="game-answer" placeholder="개수 입력" class="flex-grow p-4 rounded-xl border-2 border-slate-200 text-center text-2xl font-bold outline-none focus:border-accent">
+                        <button onclick="submitAnswer()" class="bg-accent hover:bg-orange-600 text-white px-8 rounded-xl font-jua text-2xl transition whitespace-nowrap">정답 확인</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-    }
+        <!-- 5. 결과 화면 -->
+        <div id="screen-result" class="screen w-full max-w-md text-center">
+            <div class="bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center">
+                <i id="result-icon" class="fas fa-check-circle text-7xl text-green-500 mb-6"></i>
+                <h2 id="result-title" class="text-4xl font-jua text-slate-800 mb-2">정답입니다!</h2>
+                <p id="result-desc" class="text-lg text-slate-500 mb-8">완벽하게 개수를 맞췄어요.</p>
+                
+                <div class="bg-slate-50 w-full py-6 rounded-2xl mb-8">
+                    <div class="text-sm text-slate-400 font-bold">획득 점수</div>
+                    <div id="result-score" class="text-6xl font-jua text-primary mt-1">100</div>
+                </div>
 
-    function showToast(msg) {
-        const toast = document.getElementById("toast");
-        toast.innerText = msg;
-        toast.style.display = "block";
-        setTimeout(() => toast.style.display = "none", 2000);
-    }
+                <div class="flex gap-4 w-full">
+                    <button onclick="navigate('leaderboard')" class="flex-1 py-3 bg-secondary text-slate-800 rounded-xl font-bold hover:bg-[#c9f567] transition">순위 보기</button>
+                    <button onclick="navigate('home')" class="flex-1 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition">처음으로</button>
+                </div>
+            </div>
+        </div>
 
-    function startGame() {
-        const name = document.getElementById("playerName").value.trim();
-        if(!name) return showToast("이름을 입력해주세요!");
+        <!-- 6. 명예의 전당 -->
+        <div id="screen-leaderboard" class="screen w-full max-w-5xl h-full flex flex-col">
+            <div class="bg-white rounded-2xl shadow-sm p-6 flex-grow flex flex-col mb-4">
+                <div class="flex justify-between items-end mb-6 border-b pb-4">
+                    <h2 class="text-3xl font-jua text-amber-500"><i class="fas fa-trophy mr-2"></i>명예의 전당</h2>
+                    
+                    <!-- 필터 -->
+                    <div class="flex gap-2">
+                        <select id="filter-unit" onchange="renderLeaderboard()" class="p-2 border rounded-lg outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                            <option value="all">모든 단원</option>
+                        </select>
+                        <select id="filter-grade" onchange="renderLeaderboard()" class="p-2 border rounded-lg outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                            <option value="all">전체 학년</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="filter-class" onchange="renderLeaderboard()" class="p-2 border rounded-lg outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                            <option value="all">전체 반</option>
+                            <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
+                            <option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option>
+                        </select>
+                    </div>
+                </div>
 
-        // 유저 정보 저장
-        playerData = {
-            school: document.getElementById("school").value,
-            grade: document.getElementById("grade").value,
-            classNum: document.getElementById("classNum").value,
-            studentNum: document.getElementById("studentNum").value,
-            name: name,
-            mode: document.getElementById("gameMode").value
+                <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-800 text-white sticky top-0 z-10">
+                            <tr>
+                                <th class="p-4 font-bold text-center w-20">순위</th>
+                                <th class="p-4 font-bold">단원명</th>
+                                <th class="p-4 font-bold text-center">학년 / 반</th>
+                                <th class="p-4 font-bold">이름</th>
+                                <th class="p-4 font-bold text-right text-secondary">점수</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="bg-white divide-y divide-slate-100">
+                            <!-- JS 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Firebase & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global State
+        const state = {
+            units: [],
+            scores: [],
+            currentUnit: null,
+            studentInfo: null,
+            gameTargetCount: 0,
+            db: null,
+            appId: typeof __app_id !== 'undefined' ? __app_id : 'counting-words-default',
+            userId: null
         };
 
-        currentRound = 0;
-        score = 0;
-        nextRound();
-    }
+        // Navigation
+        window.navigate = function(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            
+            if(screenId === 'leaderboard') fetchScores(); // 명예의 전당 진입 시 데이터 갱신
+        };
 
-    function nextRound() {
-        if (currentRound >= gameLevels.length) {
-            endGame();
-            return;
-        }
-        
-        const levelData = gameLevels[currentRound];
-        document.getElementById("target-word").innerText = levelData.target;
-        document.getElementById("round").innerText = currentRound + 1;
-        document.getElementById("score").innerText = score;
-        document.getElementById("answer-input").value = "";
-        
-        showScreen("screen-ready");
-    }
+        // Initialize Firebase (RULE 1, 2, 3 적용)
+        async function initFirebase() {
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBM_93jHRAwHuxFYMlHpa7kqAVp0u2v7U0",
+                    authDomain: "swarm-c23b4.firebaseapp.com",
+                    projectId: "swarm-c23b4",
+                    storageBucket: "swarm-c23b4.firebasestorage.app",
+                    messagingSenderId: "514706604321",
+                    appId: "1:514706604321:web:ede3ef113bb74a50a67e60",
+                    measurementId: "G-ELE11TGD54"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                state.db = getFirestore(app);
 
-    function startCounting() {
-        showScreen("screen-game");
-        generateWordsOnCanvas();
-    }
-
-    function generateWordsOnCanvas() {
-        const canvas = document.getElementById("word-canvas");
-        canvas.innerHTML = ""; // 초기화
-        
-        const levelData = gameLevels[currentRound];
-        
-        // 정답 개수 랜덤 지정
-        currentCorrectCount = Math.floor(Math.random() * (levelData.maxCorrect - levelData.minCorrect + 1)) + levelData.minCorrect;
-        
-        // 오답(함정) 개수 지정 (정답 개수의 1.5배 정도)
-        const distractorCount = Math.floor(currentCorrectCount * 1.5);
-
-        let wordsToRender = [];
-        for(let i=0; i<currentCorrectCount; i++) wordsToRender.push({ text: levelData.target, isCorrect: true });
-        for(let i=0; i<distractorCount; i++) {
-            const randomDistractor = levelData.distractors[Math.floor(Math.random() * levelData.distractors.length)];
-            wordsToRender.push({ text: randomDistractor, isCorrect: false });
+                // RULE 3: Auth Before Queries
+                await signInAnonymously(auth);
+                
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        state.userId = user.uid;
+                        await fetchUnits(); // 인증 후 데이터 로드
+                        document.getElementById('loading-overlay').style.display = 'none';
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase 초기화 에러:", e);
+                alert("데이터베이스 연결에 문제가 발생했습니다.");
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
         }
 
-        // 배열 섞기
-        wordsToRender.sort(() => Math.random() - 0.5);
+        // ====== 데이터베이스 통신 (교사 모드 - 단원) ======
+        async function fetchUnits() {
+            if (!state.db) return;
+            try {
+                // RULE 1: Strict Paths (Public Data)
+                const unitsRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'units');
+                const snapshot = await getDocs(unitsRef); // RULE 2: No complex queries
+                
+                state.units = [];
+                snapshot.forEach(doc => {
+                    state.units.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // 생성일 기준 내림차순 정렬 (메모리에서 처리)
+                state.units.sort((a, b) => b.createdAt - a.createdAt);
+                
+                renderUnits();
+                renderUnitOptions();
+            } catch (e) {
+                console.error("단원 로드 실패:", e);
+            }
+        }
 
-        // 화면에 뿌리기
+        window.saveUnit = async function() {
+            const title = document.getElementById('unit-title').value.trim();
+            const target = document.getElementById('unit-target').value.trim();
+            const distractorsRaw = document.getElementById('unit-distractors').value;
+            
+            if(!title || !target) return alert("단원명과 찾을 단어를 입력해주세요.");
+            
+            const distractors = distractorsRaw.split(',').map(s => s.trim()).filter(s => s);
+            if(distractors.length === 0) return alert("오답 단어를 1개 이상 입력해주세요.");
+
+            const newUnit = {
+                title, target, distractors,
+                createdAt: Date.now()
+            };
+
+            try {
+                const unitsRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'units');
+                await addDoc(unitsRef, newUnit);
+                
+                // 폼 초기화
+                document.getElementById('unit-title').value = '';
+                document.getElementById('unit-target').value = '';
+                document.getElementById('unit-distractors').value = '';
+                
+                await fetchUnits();
+                alert("단원이 성공적으로 추가되었습니다.");
+            } catch (e) {
+                console.error("저장 실패", e);
+                alert("저장에 실패했습니다.");
+            }
+        }
+
+        window.deleteUnit = async function(id) {
+            if(!confirm("정말 이 단원을 삭제하시겠습니까?")) return;
+            try {
+                const docRef = doc(state.db, 'artifacts', state.appId, 'public', 'data', 'units', id);
+                await deleteDoc(docRef);
+                await fetchUnits();
+            } catch (e) {
+                console.error("삭제 실패", e);
+            }
+        }
+
+        // UI 렌더링 - 단원 리스트 (교사 모드)
+        function renderUnits() {
+            const container = document.getElementById('unit-list');
+            if (state.units.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-10">등록된 단원이 없습니다.</div>';
+                return;
+            }
+
+            container.innerHTML = state.units.map(unit => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-slate-800 text-lg">${unit.title}</div>
+                        <div class="text-sm text-slate-500 mt-1">
+                            <span class="text-accent font-bold mr-2">정답: ${unit.target}</span>
+                            <span>오답: ${unit.distractors.join(', ')}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteUnit('${unit.id}')" class="text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // UI 렌더링 - 셀렉트 박스 (학생 화면, 필터)
+        function renderUnitOptions() {
+            const studentSelect = document.getElementById('student-unit');
+            const filterSelect = document.getElementById('filter-unit');
+            
+            const options = state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
+            
+            studentSelect.innerHTML = '<option value="">단원을 선택해주세요</option>' + options;
+            filterSelect.innerHTML = '<option value="all">모든 단원</option>' + options;
+        }
+
+        // ====== 게임 로직 ======
         const colors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
-        const canvasRect = canvas.getBoundingClientRect();
 
-        wordsToRender.forEach(wordObj => {
-            const span = document.createElement("span");
-            span.className = "scattered-word";
-            span.innerText = wordObj.text;
+        window.prepareGame = function() {
+            const unitId = document.getElementById('student-unit').value;
+            const grade = document.getElementById('student-grade').value;
+            const classNum = document.getElementById('student-class').value;
+            const stuNum = document.getElementById('student-num').value;
+            const name = document.getElementById('student-name').value.trim();
+
+            if(!unitId) return alert("단원을 선택해주세요!");
+            if(!name) return alert("이름을 입력해주세요!");
+
+            state.currentUnit = state.units.find(u => u.id === unitId);
+            state.studentInfo = { grade: Number(grade), classNum: Number(classNum), stuNum: Number(stuNum), name };
             
-            // 랜덤 위치 (화면 밖으로 나가지 않도록 마진 10%~85% 지정)
-            const top = Math.random() * 75 + 10; 
-            const left = Math.random() * 75 + 10;
-            const rotation = Math.random() * 60 - 30; // -30도 ~ 30도 회전
+            document.getElementById('game-target-word').innerText = state.currentUnit.target;
+            document.getElementById('game-answer').value = '';
             
-            span.style.top = `${top}%`;
-            span.style.left = `${left}%`;
-            span.style.transform = `rotate(${rotation}deg)`;
-            span.style.color = colors[Math.floor(Math.random() * colors.length)];
-            // 오답인 경우 폰트를 약간 다르게 섞어 혼동 주기
-            if(Math.random() > 0.5) span.style.fontWeight = "bold";
-
-            canvas.appendChild(span);
-        });
-    }
-
-    function submitAnswer() {
-        const userAnswer = parseInt(document.getElementById("answer-input").value);
-        if(isNaN(userAnswer)) return showToast("숫자를 입력해주세요!");
-
-        if(userAnswer === currentCorrectCount) {
-            // 정답을 맞추면 찾은 개수만큼 점수 부여 (PPT 룰)
-            score += currentCorrectCount;
-            showToast(`정답입니다! +${currentCorrectCount}점`);
-        } else {
-            showToast(`틀렸습니다! 정답은 ${currentCorrectCount}개 였습니다.`);
+            navigate('game');
+            startGameAnimation();
         }
 
-        currentRound++;
-        setTimeout(nextRound, 1500); // 1.5초 후 다음 라운드 진행
-    }
+        function startGameAnimation() {
+            const canvas = document.getElementById('game-canvas');
+            canvas.innerHTML = ''; // 초기화
+            
+            const unit = state.currentUnit;
+            
+            // 랜덤 정답 개수 (4개 ~ 8개)
+            state.gameTargetCount = Math.floor(Math.random() * 5) + 4;
+            // 랜덤 오답 개수 (정답의 1.5배 ~ 2배)
+            const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
 
-    function endGame() {
-        showScreen("screen-result");
-        document.getElementById("final-score").innerText = score;
-        
-        playerData.score = score;
-        
-        // Firebase 저장 호출 (위의 module 스크립트에서 선언된 함수)
-        if(typeof window.saveResultToFirebase === "function") {
-            window.saveResultToFirebase(playerData);
+            let words = [];
+            for(let i=0; i<state.gameTargetCount; i++) words.push({ text: unit.target, isTarget: true });
+            for(let i=0; i<distractorCount; i++) {
+                const randomDis = unit.distractors[Math.floor(Math.random() * unit.distractors.length)];
+                words.push({ text: randomDis, isTarget: false });
+            }
+
+            // 배열 섞기
+            words.sort(() => Math.random() - 0.5);
+
+            words.forEach(wordObj => {
+                const el = document.createElement('div');
+                el.className = 'flying-word';
+                el.innerText = wordObj.text;
+                
+                // 랜덤 속성 부여
+                const topPercent = Math.random() * 80 + 10; // 10% ~ 90% 높이
+                const duration = Math.random() * 5 + 4; // 4초 ~ 9초 동안 비행
+                const delay = Math.random() * 4; // 0초 ~ 4초 뒤 출발
+                const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                el.style.top = `${topPercent}%`;
+                el.style.color = color;
+                el.style.animation = `${direction} ${duration}s ease-in-out ${delay}s forwards`;
+                
+                // 오답 중 일부는 약간 다른 스타일 부여
+                if(!wordObj.isTarget && Math.random() > 0.5) el.style.fontWeight = '400';
+
+                canvas.appendChild(el);
+            });
         }
-    }
-</script>
 
+        window.submitAnswer = async function() {
+            const answerInput = document.getElementById('game-answer').value;
+            if(answerInput === '') return alert("개수를 입력해주세요!");
+            
+            const answer = parseInt(answerInput);
+            let score = 0;
+            const diff = Math.abs(state.gameTargetCount - answer);
+
+            const titleEl = document.getElementById('result-title');
+            const descEl = document.getElementById('result-desc');
+            const iconEl = document.getElementById('result-icon');
+
+            if(diff === 0) {
+                score = 100;
+                titleEl.innerText = "정답입니다!";
+                descEl.innerText = "완벽하게 개수를 맞췄어요! (정답: " + state.gameTargetCount + "개)";
+                iconEl.className = "fas fa-check-circle text-7xl text-green-500 mb-6";
+                iconEl.classList.add('fa-bounce');
+            } else if(diff <= 2) {
+                score = 50;
+                titleEl.innerText = "아까워요!";
+                descEl.innerText = `거의 다 맞췄는데 아쉽네요! (정답은 ${state.gameTargetCount}개 였습니다)`;
+                iconEl.className = "fas fa-exclamation-circle text-7xl text-orange-500 mb-6";
+                iconEl.classList.remove('fa-bounce');
+            } else {
+                score = 0;
+                titleEl.innerText = "틀렸습니다!";
+                descEl.innerText = `다음에 다시 도전해봐요! (정답은 ${state.gameTargetCount}개 였습니다)`;
+                iconEl.className = "fas fa-times-circle text-7xl text-red-500 mb-6";
+                iconEl.classList.remove('fa-bounce');
+            }
+
+            document.getElementById('result-score').innerText = score;
+            
+            // 점수 저장
+            await saveScore(score);
+            
+            navigate('result');
+        }
+
+        // ====== 데이터베이스 통신 (학생 점수) ======
+        async function saveScore(score) {
+            try {
+                const scoresRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores');
+                await addDoc(scoresRef, {
+                    unitId: state.currentUnit.id,
+                    unitTitle: state.currentUnit.title,
+                    grade: state.studentInfo.grade,
+                    classNum: state.studentInfo.classNum,
+                    stuNum: state.studentInfo.stuNum,
+                    name: state.studentInfo.name,
+                    score: score,
+                    createdAt: Date.now()
+                });
+            } catch(e) {
+                console.error("점수 저장 실패", e);
+            }
+        }
+
+        async function fetchScores() {
+            if (!state.db) return;
+            try {
+                const scoresRef = collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores');
+                const snapshot = await getDocs(scoresRef);
+                
+                state.scores = [];
+                snapshot.forEach(doc => {
+                    state.scores.push({ id: doc.id, ...doc.data() });
+                });
+                
+                window.renderLeaderboard();
+            } catch (e) {
+                console.error("점수 로드 실패:", e);
+            }
+        }
+
+        // 명예의 전당 렌더링 (메모리 필터링 적용 - RULE 2)
+        window.renderLeaderboard = function() {
+            const filterUnit = document.getElementById('filter-unit').value;
+            const filterGrade = document.getElementById('filter-grade').value;
+            const filterClass = document.getElementById('filter-class').value;
+
+            let filtered = state.scores;
+
+            if(filterUnit !== 'all') filtered = filtered.filter(s => s.unitId === filterUnit);
+            if(filterGrade !== 'all') filtered = filtered.filter(s => s.grade === parseInt(filterGrade));
+            if(filterClass !== 'all') filtered = filtered.filter(s => s.classNum === parseInt(filterClass));
+
+            // 점수 내림차순, 같으면 최신순 정렬
+            filtered.sort((a, b) => {
+                if(b.score !== a.score) return b.score - a.score;
+                return b.createdAt - a.createdAt;
+            });
+
+            const tbody = document.getElementById('leaderboard-body');
+            
+            if(filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">등록된 기록이 없습니다.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((s, index) => {
+                let rankTrophy = `${index + 1}`;
+                if(index === 0) rankTrophy = '<i class="fas fa-trophy text-yellow-400 text-xl"></i>';
+                else if(index === 1) rankTrophy = '<i class="fas fa-trophy text-slate-400 text-xl"></i>';
+                else if(index === 2) rankTrophy = '<i class="fas fa-trophy text-amber-700 text-xl"></i>';
+
+                return `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 text-center font-bold text-slate-500">${rankTrophy}</td>
+                    <td class="p-4 font-bold text-slate-700">${s.unitTitle}</td>
+                    <td class="p-4 text-center text-slate-500">${s.grade}학년 ${s.classNum}반</td>
+                    <td class="p-4 font-bold">${s.name} <span class="text-xs font-normal text-slate-400 ml-1">(${s.stuNum}번)</span></td>
+                    <td class="p-4 text-right font-jua text-2xl text-primary">${s.score}</td>
+                </tr>
+            `}).join('');
+        }
+
+        // 실행
+        window.onload = initFirebase;
+    </script>
 </body>
 </html>
