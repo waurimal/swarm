@@ -79,14 +79,12 @@
 </head>
 <body class="h-screen flex flex-col font-sans text-slate-800">
 
-    <!-- 글로벌 로딩 오버레이 -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
         <i class="fas fa-spinner fa-spin text-6xl text-primary mb-6"></i>
         <p class="text-2xl font-jua text-slate-600">앱을 준비하고 있습니다...</p>
         <p class="text-sm font-bold text-slate-400 mt-2">잠시만 기다려주세요</p>
     </div>
 
-    <!-- 커스텀 알림(Alert) 모달 -->
     <div id="modal-alert" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
         <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl mx-4 transform transition-all">
             <i class="fas fa-info-circle text-4xl text-primary mb-4"></i>
@@ -95,7 +93,6 @@
         </div>
     </div>
 
-    <!-- 커스텀 확인(Confirm) 모달 -->
     <div id="modal-confirm" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
         <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl mx-4 transform transition-all">
             <i class="fas fa-question-circle text-4xl text-accent mb-4"></i>
@@ -107,7 +104,6 @@
         </div>
     </div>
 
-    <!-- 동적 네비게이션 바 -->
     <nav id="main-nav" class="hidden bg-white shadow-sm p-4 px-6 justify-between items-center z-10 shrink-0">
         <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('home')">
             <i class="fas fa-bug text-primary text-3xl"></i>
@@ -118,10 +114,8 @@
         </button>
     </nav>
 
-    <!-- 메인 컨테이너 -->
     <main class="flex-1 min-h-0 w-full relative p-4 flex flex-col items-center justify-center">
         
-        <!-- 1. 심플한 홈 화면 -->
         <div id="screen-home" class="screen active flex-1 flex-col items-center justify-center w-full max-w-5xl text-center h-full">
             <div id="home-school-title" class="bg-primary text-white px-8 py-2 rounded-full font-jua text-3xl mb-8 shadow-md inline-block">학교 정보 로딩중...</div>
             <i class="fas fa-search text-7xl text-primary mb-6 animate-bounce"></i>
@@ -154,14 +148,12 @@
                 </button>
             </div>
 
-            <!-- 하단 카피라이트 -->
             <div class="mt-16 text-slate-400 text-sm font-medium">
                 <p>만든이: 곽현석(이의초등학교)</p>
                 <p>Copyright &copy; 2026 Eui Elementary School. All Rights Reserved.</p>
             </div>
         </div>
 
-        <!-- 2. 교사 모드 로그인 -->
         <div id="screen-teacher_login" class="screen flex-1 flex-col items-center justify-center w-full max-w-sm h-full">
             <div class="bg-white rounded-3xl shadow-2xl p-10 w-full text-center border border-slate-100">
                 <i class="fas fa-lock text-6xl text-slate-600 mb-6"></i>
@@ -173,7 +165,6 @@
             </div>
         </div>
 
-        <!-- 3. 교사 모드 대시보드 화면 -->
         <div id="screen-teacher" class="screen flex-1 flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col overflow-hidden relative">
                 
@@ -245,8 +236,7 @@
                                 </tr>
                             </thead>
                             <tbody id="teacher-score-list" class="bg-white divide-y divide-slate-100 text-sm">
-                                <!-- JS 렌더링 -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -269,7 +259,6 @@
             </div>
         </div>
 
-        <!-- 4. 학생 설정 화면 -->
         <div id="screen-student_setup" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-10 w-full border border-slate-100">
                 <h2 class="text-4xl font-jua text-center text-primary mb-8">내 정보 입력</h2>
@@ -310,8 +299,7 @@
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
                         <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 cursor-pointer">
                             <option value="">단원을 선택해주세요</option>
-                            <!-- JS 렌더링 -->
-                        </select>
+                            </select>
                     </div>
                     
                     <div class="grid grid-cols-3 gap-4">
@@ -347,7 +335,6 @@
             </div>
         </div>
 
-        <!-- 5. 멀티플레이어 대기실 -->
         <div id="screen-multiplayer-lobby" class="screen flex-1 flex-col w-full max-w-2xl h-full justify-center">
             <div class="bg-white rounded-3xl shadow-2xl p-8 flex flex-col overflow-hidden border border-slate-100 max-h-[85vh]">
                 <div class="text-center border-b pb-6">
@@ -374,8 +361,7 @@
                             <span class="text-sm"><span id="lobby-player-count">1</span>명 접속</span>
                         </h4>
                         <div id="lobby-player-list" class="space-y-3">
-                            <!-- JS 렌더링 -->
-                        </div>
+                            </div>
                     </div>
                 </div>
                 
@@ -387,9 +373,7 @@
             </div>
         </div>
 
-        <!-- 6. 게임 화면 (절대 좌표 캔버스로 높이 붕괴 완전 차단) -->
         <div id="screen-game" class="screen flex-1 flex-col w-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100 min-h-[450px]">
-            <!-- 상단 정보 -->
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
                     <div class="flex items-center gap-2">
@@ -401,7 +385,6 @@
                         진행: <span id="game-progress" class="text-primary font-jua text-2xl ml-1">1 / 5</span>
                     </div>
                 </div>
-                <!-- 나가기 버튼 -->
                 <button onclick="showConfirm('게임을 종료하시겠습니까?\n점수가 저장되지 않습니다.', () => leaveRoomLocal())" class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg font-jua text-xl pointer-events-auto hover:bg-slate-700 transition">
                     나가기 <i class="fas fa-sign-out-alt ml-1"></i>
                 </button>
@@ -418,12 +401,9 @@
                 <div id="game-live-list" class="space-y-2 max-h-32 overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- 단어 애니메이션 영역 -->
             <div id="game-canvas" class="absolute inset-0 z-0 overflow-hidden">
-                <!-- 애니메이션 단어 추가 영역 -->
-            </div>
+                </div>
 
-            <!-- 컴팩트한 하단 정답 입력창 -->
             <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
                 <div class="bg-white rounded-[28px] shadow-2xl p-4 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
                     <p class="text-slate-700 font-jua mb-2 text-lg text-center">정답은 몇 개?</p>
@@ -435,7 +415,6 @@
             </div>
         </div>
 
-        <!-- 7. 단일 라운드 결과 화면 -->
         <div id="screen-result" class="screen flex-col items-center justify-center w-full max-w-lg">
             <div class="bg-white rounded-3xl shadow-2xl p-12 flex flex-col items-center border border-slate-100 w-full">
                 <i id="result-icon" class="fas fa-check-circle text-8xl text-green-500 mb-6"></i>
@@ -448,12 +427,10 @@
                 </div>
 
                 <div id="result-buttons" class="flex gap-4 w-full">
-                    <!-- JS 렌더링 -->
-                </div>
+                    </div>
             </div>
         </div>
 
-        <!-- 8. 최종 (종합) 결과 화면 -->
         <div id="screen-final-result" class="screen flex-col items-center justify-center w-full max-w-3xl">
             <div class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center border border-slate-100 w-full">
                 
@@ -527,7 +504,6 @@
             </div>
         </div>
 
-        <!-- 9. 명예의 전당 -->
         <div id="screen-leaderboard" class="screen flex-1 flex-col w-full max-w-5xl h-full">
             <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
@@ -571,7 +547,6 @@
 
     </main>
 
-    <!-- Firebase & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -597,6 +572,36 @@
             multiAction: 'create',
             roomListenerUnsubscribe: null
         };
+
+        // 배경음악(효과음) 재생 함수
+        window.playBGM = function() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                
+                // 경쾌한 등장 효과음 (미 도 솔 도)
+                const notes = [261.63, 329.63, 392.00, 523.25]; 
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine'; // 부드러운 소리
+                    osc.frequency.value = freq;
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    const startTime = ctx.currentTime + i * 0.1;
+                    osc.start(startTime);
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+                    osc.stop(startTime + 0.4);
+                });
+            } catch(e) {
+                console.log("Audio play prevented:", e);
+            }
+        }
 
         window.showAlert = function(msg) {
             document.getElementById('modal-alert-msg').innerText = msg;
@@ -640,7 +645,6 @@
         async function initFirebase() {
             let isLoaded = false;
             
-            // 3초 후 강제로 로딩창 없애고 기본 모드(로컬)로 진입 (네트워크 에러/무한로딩 방어막)
             const fallbackTimer = setTimeout(() => {
                 if (!isLoaded) {
                     console.warn("네트워크 지연. 로컬 기본 모드로 실행합니다.");
@@ -1263,7 +1267,6 @@
             
             navigate('game');
             
-            // 핵심: ReferenceError를 방지하는 colors 배열 재선언 및 Reflow 지연 적용
             setTimeout(() => {
                 startGameAnimation();
             }, 50);
@@ -1273,7 +1276,6 @@
             const canvas = document.getElementById('game-canvas');
             canvas.innerHTML = ''; 
             
-            // 누락되었던 필수 색상 변수를 안전하게 내부에 복구 선언 (Bug 1 완벽 해결!)
             const textColors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
             
             const diff = state.studentInfo?.difficulty || 'normal';
@@ -1289,17 +1291,18 @@
             for(let i=0; i<state.gameTargetCount; i++) words.push({ text: state.currentTargetWord, isTarget: true });
             for(let i=0; i<distractorCount; i++) words.push({ text: autoDistractors[Math.floor(Math.random() * autoDistractors.length)], isTarget: false });
             words.sort(() => Math.random() - 0.5);
+            
+            // 효과음 재생
+            playBGM();
 
             words.forEach((wordObj, index) => {
                 const el = document.createElement('div');
                 el.className = 'flying-word';
                 el.innerText = wordObj.text;
                 
-                // 스폰 높이를 화면 중앙부위 10%~60% 안으로 단단히 제한해 하단 입력창을 덮지 않음
-                const topPercent = Math.random() * 50 + 10; 
+                // 수정사항: 입력칸(하단)에 겹치지 않도록 스폰 높이를 상단 5% ~ 35% 영역으로 제한 (여백 확보)
+                const topPercent = Math.random() * 30 + 5; 
                 const duration = Math.random() * addDur + minDur; 
-                
-                // 단어 등장 딜레이를 분산시켜 너무 오래 텅 비어있지 않고 즉시 즉시 나오게 조정
                 const delay = (index * 0.4) + (Math.random() * 0.3);
                 
                 const direction = Math.random() > 0.5 ? 'flyRight' : 'flyLeft';
@@ -1308,7 +1311,6 @@
                 el.style.top = `${topPercent}%`;
                 el.style.color = color;
                 
-                // 요소 강제 리플로우
                 void el.offsetWidth;
                 
                 el.style.animation = `${direction} ${duration}s linear ${delay}s forwards`;
