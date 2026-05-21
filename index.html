@@ -413,7 +413,7 @@
                     </span>
                     실시간 순위
                 </h4>
-                <div id="game-live-list" class="space-y-2 max-h-32 overflow-y-auto pr-1"></div>
+                <div id="game-live-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
             </div>
 
             <!-- 단어 애니메이션 영역 -->
@@ -462,11 +462,11 @@
                 <div id="final-team-scoreboard" class="hidden w-full grid grid-cols-2 gap-4 mb-6 text-center">
                     <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl">
                         <span class="text-blue-600 font-bold text-lg">🔵 청팀 총점</span>
-                        <h4 id="final-blue-team-score" class="text-4xl font-jua text-blue-700 mt-1">0점</h4>
+                        <h4 id="final-blue-team-score" class="text-4xl font-jua text-blue-700 mt-1">0점 (평균)</h4>
                     </div>
                     <div class="bg-red-50 border-2 border-red-200 p-4 rounded-2xl">
                         <span class="text-red-600 font-bold text-lg">🔴 홍팀 총점</span>
-                        <h4 id="final-red-team-score" class="text-4xl font-jua text-red-700 mt-1">0점</h4>
+                        <h4 id="final-red-team-score" class="text-4xl font-jua text-red-700 mt-1">0점 (평균)</h4>
                     </div>
                 </div>
 
@@ -531,7 +531,19 @@
                 <div class="flex justify-between items-end mb-6 border-b pb-5">
                     <h2 class="text-4xl font-jua text-amber-500"><i class="fas fa-trophy mr-3"></i>명예의 전당</h2>
                     
-                    <div class="flex gap-3">
+                    <div class="flex flex-wrap gap-3">
+                        <select id="filter-mode" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                            <option value="all">모든 모드</option>
+                            <option value="1인용 게임">1인용 게임</option>
+                            <option value="1:1 게임">1:1 게임</option>
+                            <option value="팀 대결 게임">팀 대결 게임</option>
+                        </select>
+                        <select id="filter-diff" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
+                            <option value="all">모든 난이도</option>
+                            <option value="easy">하</option>
+                            <option value="normal">중</option>
+                            <option value="hard">상</option>
+                        </select>
                         <select id="filter-unit" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
                             <option value="all">모든 단원</option>
                         </select>
@@ -595,7 +607,8 @@
             multiAction: 'create',
             roomListenerUnsubscribe: null,
             scoresUnsubscribe: null,
-            animationTimeout: null
+            animationTimeout: null,
+            isSubmitting: false // 중복 제출 및 애니메이션 중 입력 방지용 플래그
         };
 
         // 배경음악(효과음) 재생 함수 - 게임 시작용
@@ -1395,17 +1408,17 @@
         }
 
         function startRound() {
+            state.isSubmitting = false; // 중복 제출 방지 플래그 초기화
             state.currentTargetWord = state.gameWords[state.currentRoundIndex] || "단어";
             document.getElementById('game-target-word').innerText = state.currentTargetWord;
             document.getElementById('game-progress').innerText = `${state.currentRoundIndex + 1} / ${state.gameWords.length}`;
             document.getElementById('game-answer').value = '';
+            document.getElementById('game-answer').disabled = true; // 단어 출현 중 키 입력 원천 차단
             
             navigate('game');
             
-            // 기존 타이머 클리어
             if (state.animationTimeout) clearTimeout(state.animationTimeout);
             
-            // 애니메이션 진행 중일 땐 입력칸을 숨김 (투명+클릭방지 처리)
             document.getElementById('answer-input-container').classList.add('opacity-0', 'pointer-events-none');
             document.getElementById('answer-input-container').classList.remove('opacity-100');
 
@@ -1421,10 +1434,10 @@
             const textColors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
             
             const diff = state.studentInfo?.difficulty || 'normal';
-            // 난이도별 속도 늦춤 및 간격 벌림 조정
-            let minTarget = 4, maxTarget = 8, minDur = 7, addDur = 5, spawnInterval = 1.5;
-            if (diff === 'easy') { minTarget = 3; maxTarget = 6; minDur = 9; addDur = 6; spawnInterval = 2.0; }
-            else if (diff === 'hard') { minTarget = 6; maxTarget = 10; minDur = 5; addDur = 4; spawnInterval = 1.0; }
+            // 난이도별 속도를 전체적으로 늦추고, 간격을 늘려 겹침 최소화
+            let minTarget = 4, maxTarget = 8, minDur = 8, addDur = 6, spawnInterval = 1.8;
+            if (diff === 'easy') { minTarget = 3; maxTarget = 6; minDur = 10; addDur = 5; spawnInterval = 2.5; }
+            else if (diff === 'hard') { minTarget = 6; maxTarget = 10; minDur = 6; addDur = 5; spawnInterval = 1.2; }
 
             state.gameTargetCount = Math.floor(Math.random() * (maxTarget - minTarget + 1)) + minTarget;
             const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
@@ -1437,9 +1450,10 @@
             
             playBGM();
 
+            // 겹침 방지를 위한 4개 차선(Lane) 시스템: 높이를 분산시켜 앞뒤 단어가 겹치지 않게 보호
             const lanes = [5, 15, 25, 35];
             let lastLane = -1;
-            let maxAnimationTime = 0; // 애니메이션이 끝나는 시점을 계산하기 위한 변수
+            let maxAnimationTime = 0; 
 
             words.forEach((wordObj, index) => {
                 const el = document.createElement('div');
@@ -1452,11 +1466,11 @@
                 } while (laneIdx === lastLane && lanes.length > 1);
                 lastLane = laneIdx;
 
-                const topPercent = lanes[laneIdx] + (Math.random() * 6 - 3); 
+                const topPercent = lanes[laneIdx] + (Math.random() * 4 - 2); 
                 const duration = Math.random() * addDur + minDur; 
+                // 스폰 간격을 대폭 벌림
                 const delay = (index * spawnInterval) + (Math.random() * (spawnInterval * 0.3));
                 
-                // 해당 요소의 총 애니메이션 경과 시간 계산
                 const totalTime = duration + delay;
                 if (totalTime > maxAnimationTime) {
                     maxAnimationTime = totalTime;
@@ -1476,27 +1490,33 @@
                 canvas.appendChild(el);
             });
             
-            // 모든 단어가 지나간 후, 정답 입력칸 나타나게 하기 (+0.5초 여유시간)
             state.animationTimeout = setTimeout(() => {
                 const answerContainer = document.getElementById('answer-input-container');
                 if (answerContainer) {
                     answerContainer.classList.remove('opacity-0', 'pointer-events-none');
                     answerContainer.classList.add('opacity-100');
                     
-                    // 입력 시작 효과음 재생
+                    const answerInputBox = document.getElementById('game-answer');
+                    answerInputBox.disabled = false; // 이제부터 입력 가능
+                    answerInputBox.focus();
+
                     if (typeof window.playInputReadySound === 'function') {
                         window.playInputReadySound();
                     }
-
-                    document.getElementById('game-answer').focus();
                 }
             }, (maxAnimationTime * 1000) + 500);
         }
 
         window.submitAnswer = async function() {
+            if(state.isSubmitting) return; // 클릭 도배 및 중복 제출 원천 방지
+            
             const answerInput = document.getElementById('game-answer').value;
             if(answerInput === '') return showAlert("개수를 입력해주세요!");
             
+            state.isSubmitting = true; 
+            document.getElementById('game-answer').disabled = true; // 전송 즉시 키보드 추가 입력 봉쇄
+            document.getElementById('game-answer').value = '';
+
             const answer = parseInt(answerInput);
             let score = 0;
             const diff = Math.abs(state.gameTargetCount - answer);
@@ -1505,7 +1525,6 @@
             const descEl = document.getElementById('result-desc');
             const iconEl = document.getElementById('result-icon');
 
-            // 점수에 따른 사운드 재생 호출
             playResultSound(diff);
 
             if(diff === 0) { score = 100; titleEl.innerText = "정답입니다!"; descEl.innerText = `완벽하게 맞췄어요! (정답: ${state.gameTargetCount})`; iconEl.className = "fas fa-check-circle text-8xl text-green-500 mb-6"; }
@@ -1570,12 +1589,21 @@
                         } else if (roomData.mode === '팀 대결 게임') {
                             winBanner.classList.remove('hidden'); teamScoreboard.classList.remove('hidden');
                             let blueTotal = 0, redTotal = 0;
-                            players.forEach(p => p.team === 'blue' ? blueTotal += p.score : redTotal += p.score);
-                            document.getElementById('final-blue-team-score').innerText = `${blueTotal}점`;
-                            document.getElementById('final-red-team-score').innerText = `${redTotal}점`;
+                            let blueCount = 0, redCount = 0;
+                            players.forEach(p => {
+                                if(p.team === 'blue') { blueTotal += p.score; blueCount++; }
+                                else { redTotal += p.score; redCount++; }
+                            });
+                            
+                            // 팀 총점을 참가 인원수로 나눈 평균 점수 계산 (요청사항 반영)
+                            let blueAvg = blueCount > 0 ? Math.round(blueTotal / blueCount) : 0;
+                            let redAvg = redCount > 0 ? Math.round(redTotal / redCount) : 0;
 
-                            if (blueTotal > redTotal) { winBanner.innerText = "🏆 청팀 승리! 🔵"; winBanner.className = "w-full text-center py-4 bg-blue-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce"; }
-                            else if (redTotal > blueTotal) { winBanner.innerText = "🏆 홍팀 승리! 🔴"; winBanner.className = "w-full text-center py-4 bg-red-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce"; }
+                            document.getElementById('final-blue-team-score').innerText = `${blueAvg}점 (평균)`;
+                            document.getElementById('final-red-team-score').innerText = `${redAvg}점 (평균)`;
+
+                            if (blueAvg > redAvg) { winBanner.innerText = "🏆 청팀 승리! 🔵"; winBanner.className = "w-full text-center py-4 bg-blue-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce"; }
+                            else if (redAvg > blueAvg) { winBanner.innerText = "🏆 홍팀 승리! 🔴"; winBanner.className = "w-full text-center py-4 bg-red-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md fa-bounce"; }
                             else { winBanner.innerText = "무승부! 🤝"; winBanner.className = "w-full text-center py-4 bg-slate-500 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md"; }
                         }
 
@@ -1591,7 +1619,6 @@
                 winBanner.classList.add('hidden'); teamScoreboard.classList.add('hidden'); multiLeaderboardSec.classList.add('hidden');
             }
 
-            // DB에 점수 저장 (이후 리더보드는 onSnapshot으로 인해 자동 갱신됨)
             await saveScore(state.totalScore);
             navigate('final-result');
         }
@@ -1599,10 +1626,8 @@
         window.leaveRoomAndToLeaderboard = function() { cleanupRoomListener(); state.roomCode = null; navigate('leaderboard'); }
         window.leaveRoomAndToHome = function() { cleanupRoomListener(); state.roomCode = null; navigate('home'); }
 
-        // ====== 명예의 전당 점수 저장 보강 (Fix 2) ======
         async function saveScore(totalScore) {
             try {
-                // undefined 방지를 위해 속성들을 엄격히 구성 (Firestore는 undefined 속성 삽입시 저장 실패함)
                 const docData = {
                     unitId: (state.currentUnit && state.currentUnit.id) ? state.currentUnit.id : 'unknown',
                     unitTitle: (state.currentUnit && state.currentUnit.title) ? state.currentUnit.title : '기본 단원',
@@ -1622,11 +1647,19 @@
         }
 
         window.renderLeaderboard = function() {
-            const u = document.getElementById('filter-unit').value, g = document.getElementById('filter-grade').value, c = document.getElementById('filter-class').value;
+            const m = document.getElementById('filter-mode').value;
+            const d = document.getElementById('filter-diff').value;
+            const u = document.getElementById('filter-unit').value;
+            const g = document.getElementById('filter-grade').value;
+            const c = document.getElementById('filter-class').value;
+            
             let f = state.scores;
+            if(m !== 'all') f = f.filter(s => (s.mode || '1인용 게임') === m);
+            if(d !== 'all') f = f.filter(s => (s.difficulty || 'normal') === d);
             if(u !== 'all') f = f.filter(s => s.unitId === u);
             if(g !== 'all') f = f.filter(s => s.grade === parseInt(g));
             if(c !== 'all') f = f.filter(s => s.classNum === parseInt(c));
+            
             f.sort((a, b) => b.score !== a.score ? b.score - a.score : b.createdAt - a.createdAt);
 
             const tbody = document.getElementById('leaderboard-body');
