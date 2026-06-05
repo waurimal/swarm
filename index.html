@@ -53,7 +53,6 @@
         .flying-word {
             position: absolute;
             font-family: 'Jua', sans-serif;
-            /* 폰트 크기 겹침 방지를 위해 적절히 축소 */
             font-size: clamp(4rem, 8vw, 9rem); 
             white-space: nowrap;
             user-select: none;
@@ -128,21 +127,13 @@
             <h1 class="text-7xl font-jua text-slate-800 mb-4 tracking-wider">Counting Words</h1>
             <p class="text-xl text-slate-500 mb-16 font-medium">좌우에서 날아오는 단어들 중 <span class="text-accent font-bold">정답 단어</span>의 개수를 찾아보세요!</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto w-full px-4">
                 <button onclick="navigate('student_setup')" class="group bg-white border-4 border-primary hover:bg-primary p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
                     <div class="w-28 h-28 bg-purple-100 group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
                         <i class="fas fa-gamepad text-6xl text-primary group-hover:text-primary"></i>
                     </div>
                     <span class="text-3xl font-jua text-slate-800 group-hover:text-white transition duration-300">게임 시작</span>
                     <p class="text-slate-500 group-hover:text-purple-100 mt-3 font-bold transition duration-300">학생용 입장</p>
-                </button>
-
-                <button onclick="navigate('leaderboard')" class="group bg-white border-4 border-secondary hover:bg-secondary p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
-                    <div class="w-28 h-28 bg-[#eafdc4] group-hover:bg-white rounded-full flex items-center justify-center mb-6 transition duration-300">
-                        <i class="fas fa-trophy text-6xl text-amber-500"></i>
-                    </div>
-                    <span class="text-3xl font-jua text-slate-800 transition duration-300">명예의 전당</span>
-                    <p class="text-slate-500 mt-3 font-bold transition duration-300 text-slate-600">전체 순위 확인하기</p>
                 </button>
 
                 <button onclick="navigate('teacher_login')" class="group bg-white border-4 border-slate-300 hover:bg-slate-700 hover:border-slate-700 p-10 rounded-3xl shadow-xl transform transition duration-300 hover:-translate-y-3 flex flex-col items-center">
@@ -309,6 +300,7 @@
                         <label class="block text-sm font-bold mb-2 text-slate-600">도전할 단원 선택</label>
                         <select id="student-unit" class="w-full p-4 rounded-xl border-2 border-slate-200 focus:border-primary outline-none text-lg bg-slate-50 font-bold text-slate-700 cursor-pointer">
                             <option value="">단원을 선택해주세요</option>
+                            <!-- JS 렌더링 -->
                         </select>
                     </div>
                     
@@ -385,7 +377,7 @@
             </div>
         </div>
 
-        <!-- 6. 게임 화면 -->
+        <!-- 6. 게임 화면 (절대 좌표 캔버스로 높이 붕괴 완전 차단) -->
         <div id="screen-game" class="screen flex-1 flex-col w-full relative overflow-hidden bg-white rounded-3xl shadow-inner border-4 border-slate-100 min-h-[450px]">
             <div class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-4">
@@ -403,7 +395,6 @@
                 </button>
             </div>
 
-            <!-- 실시간 순위창 높이 확장 (max-h-96 적용) -->
             <div id="game-live-standings" class="hidden absolute top-24 left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-slate-200/50 max-w-xs z-20 pointer-events-auto">
                 <h4 class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
                     <span class="relative flex h-2 w-2">
@@ -420,7 +411,7 @@
                 <!-- 애니메이션 단어 추가 영역 -->
             </div>
 
-            <!-- 컴팩트한 하단 정답 입력창 -->
+            <!-- 컴팩트한 하단 정답 입력창 (애니메이션이 모두 끝날 때까지 투명 상태로 숨김 처리) -->
             <div id="answer-input-container" class="opacity-0 pointer-events-none transition-opacity duration-500 absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-xs px-4">
                 <div class="bg-white rounded-[28px] shadow-2xl p-4 border-4 border-[#dcfd8b] flex flex-col items-center w-full">
                     <p class="text-slate-700 font-jua mb-2 text-lg text-center">정답은 몇 개?</p>
@@ -518,62 +509,7 @@
                 </div>
 
                 <div class="flex gap-4 w-full">
-                    <button onclick="leaveRoomAndToLeaderboard()" class="flex-1 py-4 bg-secondary text-slate-800 rounded-xl font-jua text-2xl hover:bg-[#c9f567] transition shadow-md">명예의 전당</button>
                     <button onclick="leaveRoomAndToHome()" class="flex-1 py-4 bg-slate-200 text-slate-700 rounded-xl font-jua text-2xl hover:bg-slate-300 transition shadow-md">처음으로</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 9. 명예의 전당 -->
-        <div id="screen-leaderboard" class="screen flex-1 flex-col w-full max-w-5xl h-full">
-            <div class="bg-white rounded-2xl shadow-sm p-8 flex-grow flex flex-col mb-4">
-                <div class="flex justify-between items-end mb-6 border-b pb-5">
-                    <h2 class="text-4xl font-jua text-amber-500"><i class="fas fa-trophy mr-3"></i>명예의 전당</h2>
-                    
-                    <div class="flex flex-wrap gap-3">
-                        <select id="filter-mode" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
-                            <option value="all">모든 모드</option>
-                            <option value="1인용 게임">1인용 게임</option>
-                            <option value="1:1 게임">1:1 게임</option>
-                            <option value="팀 대결 게임">팀 대결 게임</option>
-                        </select>
-                        <select id="filter-diff" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
-                            <option value="all">모든 난이도</option>
-                            <option value="easy">하</option>
-                            <option value="normal">중</option>
-                            <option value="hard">상</option>
-                        </select>
-                        <select id="filter-unit" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
-                            <option value="all">모든 단원</option>
-                        </select>
-                        <select id="filter-grade" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
-                            <option value="all">전체 학년</option>
-                            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
-                            <option value="4">4학년</option><option value="5">5학년</option><option value="6">6학년</option>
-                        </select>
-                        <select id="filter-class" onchange="window.renderLeaderboard()" class="p-3 border rounded-xl outline-none text-sm font-bold text-slate-600 bg-slate-50">
-                            <option value="all">전체 반</option>
-                            <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option>
-                            <option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option>
-                            <option value="9">9반</option><option value="10">10반</option><option value="11">11반</option><option value="12">12반</option>
-                            <option value="13">13반</option><option value="14">14반</option><option value="15">15반</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex-grow overflow-auto relative rounded-xl border border-slate-200 shadow-inner min-h-0">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-800 text-white sticky top-0 z-10">
-                            <tr>
-                                <th class="p-5 font-bold text-center w-24 text-lg">순위</th>
-                                <th class="p-5 font-bold text-lg">단원명</th>
-                                <th class="p-5 font-bold text-center text-lg">학년 / 반</th>
-                                <th class="p-5 font-bold text-lg">이름 <span class="text-sm font-normal text-slate-300 ml-1">(모드)</span></th>
-                                <th class="p-5 font-bold text-right text-secondary text-lg">점수 <span class="text-sm font-normal text-slate-400 ml-1">(난이도)</span></th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body" class="bg-white divide-y divide-slate-100"></tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -828,7 +764,6 @@
                 navBar.classList.add('flex');
             }
             
-            if(screenId === 'leaderboard') window.renderLeaderboard();
             if(screenId === 'home') document.getElementById('teacher-pwd-input').value = '';
         };
 
@@ -983,9 +918,6 @@
                     unitSelectScores.value = currentUnitValue;
                 }
                 
-                const unitSelectLeaderboard = document.getElementById('filter-unit');
-                unitSelectLeaderboard.innerHTML = '<option value="all">모든 단원</option>' + state.units.map(u => `<option value="${u.id}">${u.title}</option>`).join('');
-                
             } catch (e) {
                 loadMockUnits();
                 renderUnits();
@@ -1062,7 +994,7 @@
             studentSelect.innerHTML = '<option value="">단원을 선택해주세요</option>' + options;
         }
 
-        // 명예의 전당 점수 실시간 동기화
+        // 점수 실시간 동기화
         function listenToScoresRealtime() {
             if (!state.db) return;
             if (state.scoresUnsubscribe) return;
@@ -1072,10 +1004,7 @@
                 state.scores = [];
                 snapshot.forEach(doc => { state.scores.push({ id: doc.id, ...doc.data() }); });
                 
-                // 보이는 탭이 리더보드이거나 교사 점수일 때 즉시 다시 그려주기
-                if (document.getElementById('screen-leaderboard').classList.contains('active')) {
-                    window.renderLeaderboard();
-                }
+                // 보이는 탭이 교사 점수일 때 즉시 다시 그려주기
                 if (document.getElementById('screen-teacher').classList.contains('active') && !document.getElementById('teacher-tab-scores').classList.contains('hidden')) {
                     window.renderTeacherScores();
                 }
@@ -1509,7 +1438,6 @@
             const textColors = ["#1e293b", "#ef4444", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b"];
             
             const diff = state.studentInfo?.difficulty || 'normal';
-            // 겹침 방지를 위해 간격(spawnInterval)을 대폭 넓히고 속도(minDur)를 늦춤
             let minTarget = 4, maxTarget = 8, minDur = 8, addDur = 6, spawnInterval = 1.8;
             if (diff === 'easy') { minTarget = 3; maxTarget = 6; minDur = 10; addDur = 5; spawnInterval = 2.5; }
             else if (diff === 'hard') { minTarget = 6; maxTarget = 10; minDur = 6; addDur = 5; spawnInterval = 1.2; }
@@ -1525,7 +1453,6 @@
             
             playBGM();
 
-            // 차선(Lane) 시스템: 높이를 분산시켜 앞뒤 단어가 겹치지 않게 철저히 보호
             const lanes = [5, 15, 25, 35];
             let lastLane = -1;
             let maxAnimationTime = 0; 
@@ -1543,7 +1470,6 @@
 
                 const topPercent = lanes[laneIdx] + (Math.random() * 4 - 2); 
                 const duration = Math.random() * addDur + minDur; 
-                // 스폰 간격을 대폭 벌려 단어들이 한데 뭉치는 현상 제거
                 const delay = (index * spawnInterval) + (Math.random() * (spawnInterval * 0.3));
                 
                 const totalTime = duration + delay;
@@ -1648,7 +1574,7 @@
             if (roomData.mode === '1:1 게임') {
                 winBanner.classList.remove('hidden'); teamScoreboard.classList.add('hidden');
                 if (players.length > 0) {
-                    winBanner.innerText = `🏆 현재 1위: ${players[0].name} (${players[0].score}점)${statusText}`;
+                    winBanner.innerText = `🏆 현재 1위: ${players[0].name} (${players[0].score}점) ${statusText}`;
                     winBanner.className = "w-full text-center py-4 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-2xl mb-6 font-jua text-4xl shadow-md" + (allFinished ? " fa-bounce" : "");
                 }
             } else if (roomData.mode === '팀 대결 게임') {
@@ -1660,6 +1586,7 @@
                     else { redTotal += p.score; redCount++; }
                 });
                 
+                // 팀 인원수로 나눈 평균 점수로 승부 결정
                 let blueAvg = blueCount > 0 ? Math.round(blueTotal / blueCount) : 0;
                 let redAvg = redCount > 0 ? Math.round(redTotal / redCount) : 0;
 
@@ -1682,11 +1609,11 @@
 
             multiLeaderboardSec.classList.remove('hidden');
             document.getElementById('final-multiplayer-leaderboard-tbody').innerHTML = players.map((p, idx) => {
-                const teamBadge = roomData.mode === '팀 대결 게임' ? ` <span class="text-xs font-normal text-slate-400">(${p.team === 'blue' ? '청팀' : '홍팀'})</span>` : '';
+                const teamBadge = roomData.mode === '팀 대결 게임' ? ` <span class="ml-1 text-xs font-normal text-slate-400">(${p.team === 'blue' ? '청팀' : '홍팀'})</span>` : '';
                 const statusHtml = p.isFinished 
                     ? `<span class="ml-2 text-xs font-bold text-green-500 bg-green-100 px-2 py-0.5 rounded-full border border-green-200">완료</span>` 
                     : `<span class="ml-2 text-xs font-bold text-orange-500 bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200">진행중 (${p.currentRound || 0}/${totalRounds})</span>`;
-
+                    
                 return `
                 <tr class="text-sm border-b border-slate-100">
                     <td class="p-3 text-center font-bold text-slate-500">${idx+1}</td>
@@ -1728,7 +1655,6 @@
             navigate('final-result');
         }
 
-        window.leaveRoomAndToLeaderboard = function() { cleanupRoomListener(); state.roomCode = null; navigate('leaderboard'); }
         window.leaveRoomAndToHome = function() { cleanupRoomListener(); state.roomCode = null; navigate('home'); }
 
         async function saveScore(totalScore) {
@@ -1751,44 +1677,13 @@
             }
         }
 
-        window.renderLeaderboard = function() {
-            const m = document.getElementById('filter-mode').value;
-            const d = document.getElementById('filter-diff').value;
-            const u = document.getElementById('filter-unit').value;
-            const g = document.getElementById('filter-grade').value;
-            const c = document.getElementById('filter-class').value;
-            
-            let f = state.scores;
-            if(m !== 'all') f = f.filter(s => (s.mode || '1인용 게임') === m);
-            if(d !== 'all') f = f.filter(s => (s.difficulty || 'normal') === d);
-            if(u !== 'all') f = f.filter(s => s.unitId === u);
-            if(g !== 'all') f = f.filter(s => s.grade === parseInt(g));
-            if(c !== 'all') f = f.filter(s => s.classNum === parseInt(c));
-            
-            f.sort((a, b) => b.score !== a.score ? b.score - a.score : b.createdAt - a.createdAt);
-
-            const tbody = document.getElementById('leaderboard-body');
-            if(f.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium text-lg">등록된 기록이 없습니다.</td></tr>';
-            
-            tbody.innerHTML = f.map((s, index) => {
-                let r = `${index + 1}`;
-                if(index === 0) r = '<i class="fas fa-trophy text-yellow-400 text-3xl"></i>';
-                else if(index === 1) r = '<i class="fas fa-trophy text-slate-400 text-2xl"></i>';
-                else if(index === 2) r = '<i class="fas fa-trophy text-amber-700 text-2xl"></i>';
-
-                let diffLabel = "보통";
-                if(s.difficulty === "easy") diffLabel = "하";
-                else if(s.difficulty === "hard") diffLabel = "상";
-
-                return `
-                <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                    <td class="p-5 text-center font-jua text-xl text-slate-500">${r}</td>
-                    <td class="p-5 font-bold text-slate-700 text-lg">${s.unitTitle}</td>
-                    <td class="p-5 text-center text-slate-500 font-medium">${s.grade}학년 ${s.classNum}반</td>
-                    <td class="p-5 font-bold text-lg">${s.name} <span class="text-sm font-normal text-slate-400 ml-1">(${s.mode || '1인용 게임'})</span></td>
-                    <td class="p-5 text-right font-jua text-3xl text-primary">${s.score} <span class="text-sm font-normal text-slate-400 font-sans">[${diffLabel}]</span></td>
-                </tr>
-            `}).join('');
+        async function fetchScores() {
+            if (!state.db) return;
+            try {
+                const snapshot = await getDocs(collection(state.db, 'artifacts', state.appId, 'public', 'data', 'scores'));
+                state.scores = [];
+                snapshot.forEach(doc => state.scores.push({ id: doc.id, ...doc.data() }));
+            } catch (e) {}
         }
 
         // 스크립트가 파싱되자마자 실행 보장
