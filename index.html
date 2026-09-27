@@ -415,13 +415,16 @@
                         <button type="button" class="hof-period-tab flex-1 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800" id="hof-tab-week" onclick="setHofPeriod('week')">이번 주</button>
                     </div>
 
-                    <!-- 2. 세부 필터 (학년, 반) -->
-                    <div class="grid grid-cols-2 gap-2 mb-3">
+                    <!-- 2. 세부 필터 (단원, 학년, 반 - 단어타자 표준 3-6학년, 1-15반) -->
+                    <div class="grid grid-cols-3 gap-1.5 mb-3">
+                        <div>
+                            <select id="hof-filter-unit" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="ALL">전체 단원</option>
+                            </select>
+                        </div>
                         <div>
                             <select id="hof-filter-grade" onchange="filterHofList()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="ALL">전체 학년</option>
-                                <option value="1">1학년</option>
-                                <option value="2">2학년</option>
                                 <option value="3">3학년</option>
                                 <option value="4">4학년</option>
                                 <option value="5">5학년</option>
@@ -437,6 +440,8 @@
                                 <option value="7">7반</option><option value="8">8반</option>
                                 <option value="9">9반</option><option value="10">10반</option>
                                 <option value="11">11반</option><option value="12">12반</option>
+                                <option value="13">13반</option><option value="14">14반</option>
+                                <option value="15">15반</option>
                             </select>
                         </div>
                     </div>
@@ -801,6 +806,281 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // ════════════════════════════════════════════════════════════════════
+        // ── 0. 역대 단원 및 랭킹 데이터 (로컬 file:/// 즉시 로드용 기본 내장) ──
+        // ════════════════════════════════════════════════════════════════════
+        const LEGACY_DEFAULT_UNITS = [
+  {
+    "id": "BtncFIJTVDoq4gJm6yf9",
+    "title": "L01",
+    "targets": [
+      "first",
+      "second",
+      "third",
+      "fourth",
+      "fifth",
+      "sixth",
+      "grade",
+      "spell",
+      "join",
+      "club",
+      "dance",
+      "draw",
+      "play",
+      "listen",
+      "read",
+      "ride"
+    ],
+    "createdAt": 1779290369321
+  },
+  {
+    "id": "93o2tnrp0gkfG8uCHfjo",
+    "title": "L02",
+    "targets": [
+      "season",
+      "spring",
+      "summer",
+      "fall",
+      "winter",
+      "beautiful",
+      "flower",
+      "cold",
+      "warm",
+      "delicious",
+      "also",
+      "colorful",
+      "swim",
+      "field trip",
+      "clear",
+      "bright"
+    ],
+    "createdAt": 1779290379548
+  },
+  {
+    "id": "XXT0gN7KTgvZuPlVv7C3",
+    "title": "L03",
+    "targets": [
+      "campaign",
+      "earth",
+      "paper",
+      "poster",
+      "save",
+      "shirt",
+      "turn off",
+      "when",
+      "world"
+    ],
+    "createdAt": 1779290390038
+  },
+  {
+    "id": "Oq4er2FMoobnYy1JFF7k",
+    "title": "L04",
+    "targets": [
+      "because",
+      "belt",
+      "birdhouse",
+      "break",
+      "congratulation",
+      "test",
+      "why",
+      "worry",
+      "wrong"
+    ],
+    "createdAt": 1779290397660
+  },
+  {
+    "id": "xV9eZlK28gJv55Z6L19X",
+    "title": "L05",
+    "targets": [
+      "bank",
+      "block",
+      "hospital",
+      "hungry",
+      "restaurant",
+      "left",
+      "restroom",
+      "stop",
+      "store",
+      "straight",
+      "town"
+    ],
+    "createdAt": 1779290406223
+  },
+  {
+    "id": "pt6TLKTaPprxJ9AN7XKQ",
+    "title": "L06",
+    "targets": [
+      "aunt",
+      "daughter",
+      "dress",
+      "eyes",
+      "hair",
+      "long",
+      "of",
+      "like",
+      "sand",
+      "short"
+    ],
+    "createdAt": 1779290422522
+  },
+  {
+    "id": "sWJcTfESmOY2MiN802T8",
+    "title": "L07",
+    "targets": [
+      "after",
+      "biscuit",
+      "laser",
+      "light",
+      "number",
+      "soft drink",
+      "tell"
+    ],
+    "createdAt": 1783382222394
+  },
+  {
+    "id": "TJDCc8vJP7can3R1wmOG",
+    "title": "L08",
+    "targets": [
+      "always",
+      "baby",
+      "catch",
+      "clock",
+      "dribble",
+      "fast",
+      "giraffe",
+      "give",
+      "goal",
+      "heavy",
+      "race",
+      "side",
+      "strong",
+      "than",
+      "tower",
+      "win"
+    ],
+    "createdAt": 1788315697460
+  },
+  {
+    "id": "DkaOobqdVHtChm9LOZeE",
+    "title": "L09",
+    "targets": [
+      "any",
+      "children",
+      "forest",
+      "hamburger",
+      "plan",
+      "program",
+      "room",
+      "stay",
+      "tent",
+      "village",
+      "zoo"
+    ],
+    "createdAt": 1789692302652
+  },
+  {
+    "id": "UtdrsTOSfVIfo3raLDvf",
+    "title": "L10",
+    "targets": [
+      "a lot of",
+      "almost",
+      "enough",
+      "exercise",
+      "habit",
+      "healthy",
+      "life",
+      "member",
+      "often",
+      "once",
+      "should",
+      "teeth",
+      "twice"
+    ],
+    "createdAt": 1789692389443
+  },
+  {
+    "id": "QeSQFOXG4Xu3pRyzFCbA",
+    "title": "L11",
+    "targets": [
+      "air",
+      "boomerang",
+      "clever",
+      "hit",
+      "into",
+      "sari"
+    ],
+    "createdAt": 1789692428001
+  },
+  {
+    "id": "fat7TNZycOSVph8L9Bkn",
+    "title": "L12",
+    "targets": [
+      "boy",
+      "forget",
+      "quiz",
+      "street",
+      "wall",
+      "wish"
+    ],
+    "createdAt": 1789692458901
+  },
+  {
+    "id": "MNdfNU4PQwgjJ8jryWl4",
+    "title": "3G L07",
+    "targets": [
+      "crayon",
+      "eraser",
+      "glue stick",
+      "notebook",
+      "pencil",
+      "pencil case",
+      "ruler",
+      "scissors"
+    ],
+    "createdAt": 1789689638055
+  }
+];
+
+const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","score":700,"grade":6,"classNum":4,"stuNum":16,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997613283},{"id":"0Lt1P5F5AzeOfgHuRI58","name":"조하준","score":920,"grade":6,"classNum":2,"stuNum":21,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335655563},{"id":"0OyqTVstw8KrzrCtxpdP","name":"홍라은","score":980,"grade":6,"classNum":6,"stuNum":24,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057507945},{"id":"0aB7nwhwhqP5YuSkKfd7","name":"김태이","score":760,"grade":6,"classNum":4,"stuNum":9,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765126413},{"id":"13DBHnuBIGsAWTKjoqvT","name":"✿➼➼✿김현중✿➼➼✿","score":1600,"grade":6,"classNum":5,"stuNum":9,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779376325527},{"id":"1PCCwSC0Yf2P6O3dAYd5","name":"이민유","score":810,"grade":6,"classNum":6,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057468001},{"id":"1dyPphphD4Df912R4vov","name":"이우진","score":620,"grade":6,"classNum":3,"stuNum":15,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412685680},{"id":"1hP9DW6PdsZxIE0Al7nP","name":"심현석","score":1580,"grade":6,"classNum":1,"stuNum":14,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779326093843},{"id":"1mHyPItHvTEgreQ4v96w","name":"정의현","score":680,"grade":6,"classNum":3,"stuNum":20,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783994917763},{"id":"1p6CIDx5e7l3rVsVYplz","name":"박서윤","score":1040,"grade":6,"classNum":5,"stuNum":10,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329978844},{"id":"2HfbQn65imzzGcF2EKB4","name":"심서현","score":660,"grade":6,"classNum":1,"stuNum":13,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506729772},{"id":"2P2iwCwbCjJq27Zg4zGl","name":"조하준","score":810,"grade":6,"classNum":2,"stuNum":21,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781233180119},{"id":"2V4Aar7hLeAlDsmxwmm0","name":"김지유","score":1080,"grade":6,"classNum":1,"stuNum":4,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325832051},{"id":"2iFiE2hepAThL3O2WpNz","name":"정예린","score":700,"grade":6,"classNum":6,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057557517},{"id":"2kqL45kcsz6R9MwNk5ak","name":"유지현","score":1010,"grade":6,"classNum":1,"stuNum":16,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325879667},{"id":"2mLOG5BrrfhrTK8m6t1d","name":"이은서","score":930,"grade":6,"classNum":6,"stuNum":25,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057498440},{"id":"2wBOHSufbEJHg54H5lsn","name":"오주호","score":900,"grade":6,"classNum":3,"stuNum":11,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412635290},{"id":"38z0XI5yFjMtX6heTA6I","name":"김유리","score":900,"grade":6,"classNum":3,"stuNum":5,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779413225606},{"id":"3Gv3Vfwt9rEeOzzQA8yG","name":"이유건","score":560,"grade":6,"classNum":5,"stuNum":20,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779330004217},{"id":"3GwvwJe9wBmiJdLIckHG","name":"이로운","score":980,"grade":6,"classNum":5,"stuNum":18,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144163728},{"id":"3PULx3z7Tg8KpUyits5o","name":"성예준","score":600,"grade":6,"classNum":1,"stuNum":10,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506703458},{"id":"3ZyPUrQpn55l4vNyRUVT","name":"이준우","score":570,"grade":6,"classNum":3,"stuNum":17,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783994875007},{"id":"3uMbuM1R3JFXMv3NfeHy","name":"김의명","score":840,"grade":6,"classNum":2,"stuNum":4,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335656838},{"id":"3uQdCsOT5yjhHLGX2u9A","name":"rlatjdals","score":480,"grade":6,"classNum":1,"stuNum":2,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140735105},{"id":"3z9VXKk4LgZL1B5cSt0G","name":"김소중","score":700,"grade":6,"classNum":5,"stuNum":7,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164449927},{"id":"4GiDV7ccffmwtfosJ6Zm","name":"강채원","score":920,"grade":6,"classNum":3,"stuNum":1,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412633498},{"id":"4L23nQFejKNTAdeSXjc0","name":"한준이","score":900,"grade":6,"classNum":3,"stuNum":22,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226254240},{"id":"4bNGFFWJMtyQMvWp7xWW","name":"김가원","score":950,"grade":6,"classNum":3,"stuNum":2,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412667840},{"id":"4mmA8DVbTsi4lmDwJ9Eg","name":"박민준","score":880,"grade":6,"classNum":2,"stuNum":9,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232797271},{"id":"4wRlTm2gSOiwtwdbgoxI","name":"장준우","score":610,"grade":6,"classNum":1,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506752111},{"id":"4wk1THTiiPtGRxNFBdUL","name":"정유찬","score":910,"grade":6,"classNum":1,"stuNum":23,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325879472},{"id":"56UkEgZ5Uqeun1ssIaZv","name":"주은","score":680,"grade":6,"classNum":6,"stuNum":12,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784081078194},{"id":"5fekp4aSHiwcQt1XsQm8","name":"정의현","score":930,"grade":6,"classNum":3,"stuNum":20,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412635806},{"id":"5w98ZxWozBqdc2l21xz0","name":"최시윤","score":920,"grade":6,"classNum":6,"stuNum":20,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057498717},{"id":"62yPMtbzzSuT4ON7w2Ti","name":"전수현","score":960,"grade":6,"classNum":4,"stuNum":18,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146966844},{"id":"664id9kFZgTN5J4647X5","name":"김현중","score":1080,"grade":6,"classNum":5,"stuNum":9,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329301168},{"id":"6Bmj81BBvlbW0PHzGQIW","name":"함지희","score":800,"grade":6,"classNum":5,"stuNum":25,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329275587},{"id":"6H9izB9OHcaNgrNDLmpw","name":"chldmsgh","score":590,"grade":6,"classNum":6,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080779239},{"id":"6TtkTUxrKUxyIjhFDYSG","name":"김쥰우","score":510,"grade":6,"classNum":4,"stuNum":6,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765087343},{"id":"6a6SvkyV82W754oHkJak","name":"박시후","score":820,"grade":6,"classNum":6,"stuNum":11,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779330009407},{"id":"6pca9bEf9RjPx2KE7yQN","name":"정유찬","score":640,"grade":6,"classNum":1,"stuNum":23,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506695388},{"id":"6z2pfLxwGC9KrMA2HGen","name":"구현지","score":530,"grade":6,"classNum":4,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997719291},{"id":"73VoyP25hco1lLjNDkLj","name":"이도윤","score":840,"grade":6,"classNum":2,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232786144},{"id":"7DloDqwJsWRd6yH4VHAz","name":"양재현","score":570,"grade":6,"classNum":4,"stuNum":13,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765127275},{"id":"7PpgTFvwHRMe2CoRFhxD","name":"김서형","score":500,"grade":6,"classNum":5,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784163970216},{"id":"7bDkS4IKsGsiYZH6y3hx","name":"김진영","score":730,"grade":6,"classNum":8,"stuNum":8,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329982517},{"id":"7jsTZpqXkhenopoks4mE","name":"윤정빈","score":870,"grade":6,"classNum":4,"stuNum":14,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781147068252},{"id":"838hJ9aMbJ5jcqjmQ19y","name":"조아라","score":930,"grade":6,"classNum":5,"stuNum":23,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143853609},{"id":"89naRGM4qVAOxTEudNr4","name":"이예원","score":930,"grade":6,"classNum":1,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140712530},{"id":"8B1fUEFZnckhMCRcDBON","name":"정수현","score":930,"grade":6,"classNum":6,"stuNum":18,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057503090},{"id":"8XWsXGXoZX6QMd9qEL4P","name":"김강호","score":890,"grade":6,"classNum":2,"stuNum":12,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335659232},{"id":"8YT7VWKEAThCuRbBh3l8","name":"이윤서","score":930,"grade":6,"classNum":2,"stuNum":18,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232759818},{"id":"8eXJFGz3SyvKDgZ3SbRp","name":"이준희","score":480,"grade":6,"classNum":1,"stuNum":20,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506800022},{"id":"8pqit3xjkV1O34VvLenb","name":"심은율","score":770,"grade":6,"classNum":2,"stuNum":12,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335673211},{"id":"8sGlerTT2p9YnCcpiLMy","name":"정시윤","score":570,"grade":6,"classNum":1,"stuNum":22,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784507303916},{"id":"8tPYKZnuXxqQVNbPjK2I","name":"성예준","score":950,"grade":6,"classNum":1,"stuNum":10,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140636901},{"id":"9FVd1xjfF0OQHJXOgXPN","name":"이가람","score":620,"grade":6,"classNum":4,"stuNum":15,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997695037},{"id":"9HgKfxQ8YJcBdwkpB2n0","name":"송수민","score":560,"grade":6,"classNum":1,"stuNum":12,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506747769},{"id":"9HyeT0D3WRiZpCd14RWe","name":"김민지","score":980,"grade":6,"classNum":5,"stuNum":3,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143881570},{"id":"9LeoiQlsW1SnmaRvqc6j","name":"최이서","score":710,"grade":1,"classNum":1,"stuNum":1,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325907305},{"id":"9N8Y9LzlH9SfdHwxdtPe","name":"이준후","score":880,"grade":6,"classNum":4,"stuNum":16,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765062851},{"id":"9fDNJNF0yUbEcoDbxXwJ","name":"박재준","score":910,"grade":6,"classNum":1,"stuNum":8,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325897050},{"id":"9j7x50uuhMEbTGSGWdgz","name":"이효인","score":1560,"grade":6,"classNum":3,"stuNum":18,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413347128},{"id":"9oHxgS6GO84Aq8KBDgtl","name":"심현석","score":630,"grade":6,"classNum":1,"stuNum":14,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506641332},{"id":"9wlOvk5lwkpbkrga3EFz","name":"김나윤","score":760,"grade":6,"classNum":4,"stuNum":3,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146929653},{"id":"A9ZLq6Jrabvk1ilkSz1Z","name":"홍재윤","score":980,"grade":6,"classNum":3,"stuNum":24,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226739570},{"id":"AP8GMnUCm9fQ6qWsGGAu","name":"김나윤","score":800,"grade":6,"classNum":4,"stuNum":3,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765063249},{"id":"AtlfvSZgLNR0oU5kyvv6","name":"김민채","score":980,"grade":6,"classNum":3,"stuNum":3,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226170876},{"id":"B3IJxraYsTi9o4DcFxp9","name":"유삐","score":680,"grade":6,"classNum":3,"stuNum":5,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995017232},{"id":"BA1AyAaWQquR753kFral","name":"하지우","score":790,"grade":6,"classNum":2,"stuNum":24,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335620472},{"id":"BEZkzlQniHXGTcet3LaU","name":"정하이","score":950,"grade":6,"classNum":5,"stuNum":22,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143855159},{"id":"BLKR53Y1JTW6xusW4654","name":"현승민","score":640,"grade":6,"classNum":6,"stuNum":23,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784081081580},{"id":"BW3oFtvCMckkO944AIYs","name":"김의명","score":900,"grade":6,"classNum":2,"stuNum":4,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232780007},{"id":"BajDcMZKMJKg77Bq95Wr","name":"김주원","score":500,"grade":6,"classNum":6,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784081086414},{"id":"BsucUeachbCM00fd3Tjj","name":"서예지","score":960,"grade":6,"classNum":1,"stuNum":9,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325868363},{"id":"Bt1LGDChGQ768vQnBaIS","name":"이우진","score":1420,"grade":6,"classNum":3,"stuNum":15,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413381596},{"id":"C7yv77IrSB3C5MMqrIcg","name":"하지우","score":960,"grade":6,"classNum":2,"stuNum":24,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232753137},{"id":"CL49r0HdCBhNIyCiLlkm","name":"주은","score":680,"grade":6,"classNum":6,"stuNum":12,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080759966},{"id":"CsXm0CuJxv8ApmxdcRnC","name":"이효인","score":1000,"grade":6,"classNum":3,"stuNum":18,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226219705},{"id":"D5tTDI5OdGTPyAQ9hvhl","name":"정다솜","score":870,"grade":6,"classNum":4,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146953879},{"id":"DKvN9dswZ9sawRo475Gh","name":"송민채","score":560,"grade":6,"classNum":4,"stuNum":12,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997712761},{"id":"DkWwkjTAUVlTGjr1SHV5","name":"이예원","score":510,"grade":6,"classNum":1,"stuNum":19,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506660247},{"id":"DsVEGs7mzconbO998eTF","name":"손슬아","score":960,"grade":6,"classNum":1,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781141110198},{"id":"E0Xs8BkxSHOSPlW7qh4D","name":"김민지","score":980,"grade":6,"classNum":5,"stuNum":3,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329959879},{"id":"E9dM82Il5Yc15VSa5QjQ","name":"정예담","score":540,"grade":6,"classNum":3,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412686931},{"id":"ESdmvH1gjQx2irW9cd36","name":"박서윤","score":950,"grade":6,"classNum":5,"stuNum":10,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143903054},{"id":"EusR6C5M8IG45LCWIBxn","name":"이도현","score":1000,"grade":6,"classNum":2,"stuNum":17,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232771778},{"id":"EzVtjze3OCbTeWg1syrg","name":"신민규","score":930,"grade":6,"classNum":5,"stuNum":14,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329257010},{"id":"FCX3XgHzaXvi25AqCL6R","name":"방시윤","score":780,"grade":6,"classNum":5,"stuNum":12,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329295484},{"id":"FFaT6SjZkpmktv4N7arQ","name":"김민재","score":880,"grade":6,"classNum":2,"stuNum":3,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335637316},{"id":"FOWzo1VZf2ThLxBQhx4S","name":"이유건","score":810,"grade":6,"classNum":5,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143870364},{"id":"FRYeqtoBGuDCrqKQhf5a","name":"김수현","score":680,"grade":6,"classNum":5,"stuNum":6,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164310992},{"id":"Fc7pvLGsPI10WzSQWjwS","name":"정예담","score":920,"grade":6,"classNum":3,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226292282},{"id":"Fdeu9ECD8Hzwlh4sFvcW","name":"문영준","score":900,"grade":6,"classNum":6,"stuNum":7,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057643769},{"id":"FmB2oWLXIVJEXm71IFC4","name":"김가원","score":1550,"grade":6,"classNum":3,"stuNum":2,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413384280},{"id":"Fv9Phu7Ez0lA46AtuTbe","name":"김수현","score":890,"grade":6,"classNum":5,"stuNum":6,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329258958},{"id":"GdyfAZvvgaLKFiZ999yL","name":"한준이","score":680,"grade":6,"classNum":3,"stuNum":22,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412655988},{"id":"GpVNIsEqLEWdIM91qTMX","name":"양재현","score":800,"grade":6,"classNum":4,"stuNum":13,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146942179},{"id":"Gy8plkukeaFSjnE60Fes","name":"방시윤","score":980,"grade":6,"classNum":5,"stuNum":12,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143897364},{"id":"H0weCUnnxG6338WC5n8v","name":"박재준","score":980,"grade":6,"classNum":1,"stuNum":8,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140658259},{"id":"HISJCYuEcneuzDd67Wkn","name":"정수현","score":700,"grade":6,"classNum":6,"stuNum":18,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080929459},{"id":"HWuZjhNRTbUuQhIBrDjk","name":"조하준","score":630,"grade":6,"classNum":2,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783988521125},{"id":"HcYO7j2J2CpEyOnPhqJ5","name":"김쥰우","score":550,"grade":6,"classNum":4,"stuNum":6,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997798906},{"id":"HxTfRfLWHyvja9Zeq8Rg","name":"조서연","score":760,"grade":6,"classNum":4,"stuNum":24,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765075463},{"id":"IU2dqqzPOqarFetrUR1t","name":"이주아","score":860,"grade":6,"classNum":2,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232807774},{"id":"Id8VGmmMe26aIdKec3RB","name":"유지현","score":510,"grade":6,"classNum":1,"stuNum":16,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506720092},{"id":"IuPWIuVRuwitoZWTh7da","name":"김이든","score":690,"grade":6,"classNum":5,"stuNum":7,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329948228},{"id":"IvOQYPIRo6Ssxn8olr4B","name":"윤서하","score":950,"grade":6,"classNum":1,"stuNum":17,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325834872},{"id":"Ivh619LEoNQRYHHZ01Jw","name":"조아라","score":820,"grade":6,"classNum":5,"stuNum":23,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329989848},{"id":"Iwqr1un7D4yBGp28upld","name":"주이든","score":880,"grade":6,"classNum":2,"stuNum":22,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335663880},{"id":"J8SmzqpLK2uczHrQeZDb","name":"이름을 입력하세요","score":130,"grade":6,"classNum":1,"stuNum":3,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784507013286},{"id":"JAqjtbw3xjAE3RrOIn81","name":"저앶윤","score":430,"grade":6,"classNum":4,"stuNum":22,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997548274},{"id":"JBUpOyf259Ut2IvshUuB","name":"류호재","score":730,"grade":6,"classNum":1,"stuNum":6,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140665405},{"id":"JCN3rpemtrxMiJVVylM3","name":"백윤오","score":500,"grade":6,"classNum":3,"stuNum":8,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783994989657},{"id":"JcuZIbPLscTssDWkOByE","name":"정시은","score":900,"grade":6,"classNum":4,"stuNum":20,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765072431},{"id":"JinYldBseBbAO1JODGkx","name":"김태이","score":890,"grade":6,"classNum":4,"stuNum":9,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146970868},{"id":"Js1jXEUfbBq1mvfYkToj","name":"김현중","score":700,"grade":6,"classNum":5,"stuNum":9,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784163917046},{"id":"Ju8wDzfBfrFl3ZR8XVvz","name":"팽서아","score":930,"grade":6,"classNum":5,"stuNum":24,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143833509},{"id":"JztofTmacppYAoKhapsL","name":"김유리","score":770,"grade":6,"classNum":3,"stuNum":5,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412687686},{"id":"KLXXjxg1vSQPf8Qpic9r","name":"심재엽","score":1000,"grade":6,"classNum":2,"stuNum":13,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232841022},{"id":"KVyHxaPDhny5eODBnjli","name":"김팬더","score":630,"grade":6,"classNum":4,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997702503},{"id":"KeCo3jMZlf5PtErhKI8I","name":"정은채","score":850,"grade":6,"classNum":4,"stuNum":21,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765040770},{"id":"KkLXR2pJ8CHD3rhgCPAN","name":"류지윤","score":540,"grade":6,"classNum":6,"stuNum":6,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784081075131},{"id":"Ku1IYJiPX7inamptt5Qg","name":"윤서하","score":570,"grade":6,"classNum":1,"stuNum":17,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506634011},{"id":"L5lHXSWmw36lc6czFkgX","name":"박민준","score":950,"grade":6,"classNum":2,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335641428},{"id":"LT2199eo7TUDC3S3uLZs","name":"최온유","score":770,"grade":6,"classNum":1,"stuNum":25,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325929477},{"id":"LXD4O96f5BcFlxG0LIoM","name":"정의현","score":930,"grade":6,"classNum":3,"stuNum":20,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226222121},{"id":"LZ56vW6pT9Cklk1Zg7t6","name":"현승민","score":1000,"grade":6,"classNum":6,"stuNum":23,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057463394},{"id":"LoU7ghl9UlFdxBiYvBoZ","name":"이유건","score":440,"grade":6,"classNum":5,"stuNum":20,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164018993},{"id":"LyA6HCVh2It67dPcBDP8","name":"유재아","score":960,"grade":6,"classNum":5,"stuNum":16,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329967462},{"id":"M0Ylgp4MzoiMi0mwEeoD","name":"이로운","score":1080,"grade":6,"classNum":5,"stuNum":18,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329921859},{"id":"MU7FnwDtYyCWHYkKWULq","name":"이로운","score":1040,"grade":6,"classNum":5,"stuNum":18,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329195856},{"id":"MllsGV5PHzRBtx9KS9lL","name":"조서연","score":330,"grade":6,"classNum":4,"stuNum":24,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783998115320},{"id":"MneapjYK61Pa7GiGXjgm","name":"심서현","score":980,"grade":6,"classNum":1,"stuNum":13,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140625733},{"id":"MoHlk23UqWx0OwhfIHg1","name":"이지용","score":860,"grade":6,"classNum":4,"stuNum":17,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146942202},{"id":"NMErJyaBq1l4tNWfGnTd","name":"이은서","score":430,"grade":6,"classNum":6,"stuNum":25,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080797076},{"id":"NblLYfVAC8bR0UYxLJgS","name":"이하준","score":840,"grade":6,"classNum":6,"stuNum":17,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057494729},{"id":"NgnCJWjCZATULLo1mTZo","name":"유지현","score":930,"grade":6,"classNum":1,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140672992},{"id":"NhXUCDJiFMhc2Pliq61G","name":"신혜미","score":980,"grade":6,"classNum":2,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232829952},{"id":"NumQpRwhNKvi8wJI7Z7j","name":"윤서하","score":740,"grade":6,"classNum":1,"stuNum":17,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140643593},{"id":"NzxjLHzB8xxMUGe6WRpj","name":"한태희","score":810,"grade":6,"classNum":3,"stuNum":23,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412682631},{"id":"OFkxyTrmu2vzeqw3nhVG","name":"한태희","score":930,"grade":6,"classNum":3,"stuNum":23,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226186978},{"id":"OOYbwshn9TbShWDBqNLe","name":"김수현","score":960,"grade":6,"classNum":5,"stuNum":6,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143825754},{"id":"OOtHrY3hHSK0nJpRxMaF","name":"권성운","score":660,"grade":6,"classNum":6,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080881640},{"id":"Oliuiw7xDVDxHwRrDDGr","name":"이준우","score":840,"grade":6,"classNum":3,"stuNum":17,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412643745},{"id":"OoAcxoG9ux6wr24NLgV1","name":"홍재윤","score":680,"grade":6,"classNum":3,"stuNum":24,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412666624},{"id":"Oubg5gOWC33KU2kvSm0H","name":"정여민","score":860,"grade":6,"classNum":5,"stuNum":21,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329958055},{"id":"PC9TC06cZz6lXpqG6MUe","name":"김수현","score":980,"grade":6,"classNum":5,"stuNum":6,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144240356},{"id":"PCEs1ZA3f4AElDy2YjTc","name":"이규원","score":880,"grade":6,"classNum":3,"stuNum":12,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412724995},{"id":"PLElBlXqENoQWqtiUgMj","name":"성민준","score":950,"grade":6,"classNum":6,"stuNum":13,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057509177},{"id":"PP1PNdalKpWYWAr34bnG","name":"김주원","score":1000,"grade":6,"classNum":6,"stuNum":4,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057499097},{"id":"PXRlb8a2spi9pbLp3aNg","name":"이세인","score":910,"grade":6,"classNum":3,"stuNum":13,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412648820},{"id":"Pc60ZdhyndfURooAH9js","name":"윤예은","score":690,"grade":6,"classNum":2,"stuNum":14,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335654122},{"id":"PevpCMK3Q6AFMxGdekjm","name":"정다솜","score":790,"grade":6,"classNum":4,"stuNum":19,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765042399},{"id":"PifmWpOz5svoh9trd7Zb","name":"정시은","score":980,"grade":6,"classNum":4,"stuNum":20,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146925999},{"id":"PrCvYrAfzjpmckmaXykr","name":"안도연","score":500,"grade":6,"classNum":6,"stuNum":15,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080779562},{"id":"Q0yIrExNRlFG9ZjLiG00","name":"강다원","score":910,"grade":6,"classNum":5,"stuNum":1,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329941299},{"id":"Q1PlP3tBe8dvaCm9eziW","name":"조아��","score":890,"grade":6,"classNum":3,"stuNum":21,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226476402},{"id":"QJ8RhG1pJld1AyrpPvqq","name":"박주혁","score":490,"grade":6,"classNum":3,"stuNum":7,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412659790},{"id":"QSNV1On1Xk5TgL2PYTYb","name":"이하준","score":620,"grade":6,"classNum":6,"stuNum":17,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080776315},{"id":"QU5USPyIGFcVdUKYRLvM","name":"김나윤","score":630,"grade":6,"classNum":4,"stuNum":3,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997605100},{"id":"QVCOFhoVok2danqnpSk3","name":"김진영","score":390,"grade":6,"classNum":5,"stuNum":8,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164155023},{"id":"QeFoucwT8gPOrFCaY7sq","name":"성민준","score":280,"grade":6,"classNum":6,"stuNum":13,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080867835},{"id":"Qio6dYnonJZNbSYjtjyp","name":"김현민","score":750,"grade":6,"classNum":4,"stuNum":6,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1781579610280},{"id":"RUIwGU6RrBiE3KT6SnwF","name":"이규원","score":660,"grade":6,"classNum":3,"stuNum":12,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783994995352},{"id":"Rnh9ncJgWVgsZyZeHH5S","name":"홍일동","score":700,"grade":1,"classNum":1,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995527772},{"id":"RoD6ufQZSQwRRC1Knztz","name":"안도연","score":690,"grade":6,"classNum":6,"stuNum":15,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057501965},{"id":"S661YM2NZt6kR78DOpdA","name":"박소람","score":860,"grade":6,"classNum":2,"stuNum":10,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232815187},{"id":"SD3VRkm6bsJ8VpMRkF8g","name":"정여민","score":900,"grade":6,"classNum":5,"stuNum":21,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143816469},{"id":"SPDnBDsbp2iGCXtO2Gb9","name":"이도헌","score":630,"grade":6,"classNum":1,"stuNum":18,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140739568},{"id":"SowwPwXYTuJQ1rUFr04z","name":"박규원","score":860,"grade":6,"classNum":6,"stuNum":8,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1781057509489},{"id":"TFJ4nz1COcUTdSItwWu1","name":"황지원","score":620,"grade":6,"classNum":3,"stuNum":25,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226357485},{"id":"U64xgdqrbNqjDThR0E61","name":"정여민","score":680,"grade":6,"classNum":5,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164013565},{"id":"UBk4NOxECil7qaWkBN1v","name":"박서준","score":1040,"grade":6,"classNum":3,"stuNum":6,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412643091},{"id":"UIpiz9Rkfl6X9JLa3B5w","name":"임시후","score":510,"grade":3,"classNum":1,"stuNum":16,"unitId":"MNdfNU4PQwgjJ8jryWl4","unitTitle":"3G L07","createdAt":1789690386511},{"id":"UNpEe1uMRSggTv4aSohz","name":"이도윤","score":880,"grade":6,"classNum":2,"stuNum":16,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335645904},{"id":"UZwy7ZmpK6xgvSv1w6nT","name":"구현지","score":980,"grade":6,"classNum":4,"stuNum":1,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146892743},{"id":"UdgrQ9xzF412zctRwDLT","name":"최은호","score":640,"grade":6,"classNum":6,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784081086775},{"id":"UjTmppvbhJlLdR9GFyE5","name":"팽서아","score":550,"grade":6,"classNum":5,"stuNum":24,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784163953373},{"id":"V0wf1s449R5q2lUBCkoW","name":"강다원","score":1000,"grade":6,"classNum":5,"stuNum":1,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143858723},{"id":"V84mrRh7NTdE4B6i40Ln","name":"이도헌","score":940,"grade":6,"classNum":1,"stuNum":18,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325844562},{"id":"V91vpUKrEQhSJGZE9a1R","name":"이강필","score":640,"grade":6,"classNum":2,"stuNum":15,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232864028},{"id":"VEoSv0D5BN58r2mgbmXM","name":"송제원","score":1480,"grade":6,"classNum":3,"stuNum":9,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413373982},{"id":"VMBXqIrSBEbTUbegKZSy","name":"박정율","score":860,"grade":6,"classNum":4,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146958506},{"id":"VMGO6veBxk5T0l4PmeEy","name":"강채원","score":960,"grade":6,"classNum":3,"stuNum":1,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226183183},{"id":"VQRWFqx1jodT8GTpN54x","name":"문영준","score":700,"grade":6,"classNum":6,"stuNum":7,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080939064},{"id":"VV3CkBlGsJtiDxTeh2d2","name":"정하이","score":940,"grade":6,"classNum":5,"stuNum":22,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329944845},{"id":"WABS3Ex5dGvzS2RhKwRs","name":"송민채","score":690,"grade":6,"classNum":4,"stuNum":12,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765086922},{"id":"WFtAHafU9vFQ7mGpgDhY","name":"이로운","score":660,"grade":6,"classNum":5,"stuNum":18,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164067885},{"id":"WKESrJqmStGhG15TKYFC","name":"류지윤","score":130,"grade":6,"classNum":6,"stuNum":6,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057568773},{"id":"WMgEliJakMlnqi9irVJM","name":"권성운","score":880,"grade":6,"classNum":6,"stuNum":1,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057470034},{"id":"WZqPPNnm0A4pEVyIkBbF","name":"김하율","score":820,"grade":6,"classNum":1,"stuNum":5,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140742467},{"id":"Wnvidaoar6s0gYStghgR","name":"석예준","score":690,"grade":6,"classNum":5,"stuNum":13,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329963423},{"id":"WxZwFneLtTLYc1m9GhSf","name":"유봄","score":730,"grade":6,"classNum":1,"stuNum":15,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781141087835},{"id":"Wxk9TOzsgean93wS9AzE","name":"방시윤","score":430,"grade":6,"classNum":5,"stuNum":12,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164354500},{"id":"XH562hW18m3w6YUx58lq","name":"ㅅ","score":660,"grade":1,"classNum":1,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783863931793},{"id":"XJPr2Y08rF7PiVh3mKK4","name":"이온유","score":820,"grade":6,"classNum":3,"stuNum":14,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412715286},{"id":"XSVjW8BbGgW9BOKKJVCL","name":"김현중","score":1000,"grade":6,"classNum":5,"stuNum":9,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144095369},{"id":"XdoGlwBpGezlXEo9y9uC","name":"정하이","score":870,"grade":6,"classNum":5,"stuNum":22,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329280817},{"id":"XiDts1KNL8meWxp8w1NV","name":"박소람","score":680,"grade":6,"classNum":2,"stuNum":10,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335662436},{"id":"XonXOfFKv508b45byZEV","name":"이시현","score":840,"grade":6,"classNum":5,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329939572},{"id":"XpgZDqbki9PY6tCjMeQH","name":"함지희","score":490,"grade":6,"classNum":5,"stuNum":25,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164058939},{"id":"Y5tc2YYsAemCiLeGQgAI","name":"오한울","score":930,"grade":6,"classNum":5,"stuNum":15,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144202397},{"id":"YUmGh3yoAA9D2r6PuIXy","name":"조아영","score":780,"grade":6,"classNum":3,"stuNum":21,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412688562},{"id":"YXOC9MDz86SyeJcc8EWg","name":"김가원","score":1000,"grade":6,"classNum":3,"stuNum":2,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226698380},{"id":"YsqMf410266riVvf8l0V","name":"강채원","score":640,"grade":6,"classNum":3,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995009605},{"id":"ZM0oyYNyfDXmMj7Z0wlC","name":"손슬아","score":810,"grade":6,"classNum":1,"stuNum":11,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325888441},{"id":"ZmFMYiLZFEzX1yZKNhyR","name":"이시현","score":1040,"grade":6,"classNum":1,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329219408},{"id":"ZoQ4ydF4YCmSnZ9Z87Rp","name":"김민성","score":590,"grade":6,"classNum":1,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506715238},{"id":"Zoo80npdIJcG3nB4h3bt","name":"이주아","score":930,"grade":6,"classNum":2,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335642022},{"id":"ZxbrO1oZRvEbfIigpZbR","name":"김소중","score":1040,"grade":6,"classNum":5,"stuNum":5,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329990863},{"id":"a4Tk6nDBT6Rtr024KVt5","name":"정예원","score":760,"grade":6,"classNum":2,"stuNum":20,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232802861},{"id":"a9d3AuBBahGAkMO9us4c","name":"이윤수","score":980,"grade":6,"classNum":3,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226247515},{"id":"aIJT5N2UxGjbCXqXJsnV","name":"박서준","score":1000,"grade":6,"classNum":3,"stuNum":6,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226313306},{"id":"aTDLtpeDaz9s5bmIHevD","name":"정시윤","score":540,"grade":6,"classNum":1,"stuNum":22,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506701086},{"id":"aVEpkmDodDq5XyXk9gAJ","name":"송제원","score":710,"grade":6,"classNum":3,"stuNum":9,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412664837},{"id":"azCmOxktTtO7ATDQCRZ6","name":"김가원","score":680,"grade":6,"classNum":3,"stuNum":2,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995055822},{"id":"b2bgBWwzgEXZ7X3LwBkV","name":"이준후","score":1000,"grade":6,"classNum":4,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146967624},{"id":"bEFRunuyjZGD0OoW4Kwb","name":"정시윤","score":840,"grade":6,"classNum":1,"stuNum":22,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140763857},{"id":"bI3e8gbn4vUFBXBSltZk","name":"권범","score":670,"grade":6,"classNum":5,"stuNum":2,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329973273},{"id":"bMLoEEmWsA2S0r1XZi58","name":"김채윤","score":990,"grade":6,"classNum":2,"stuNum":7,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335646657},{"id":"bjZeTArVIMMfmB4G9ULm","name":"정다솜","score":610,"grade":6,"classNum":4,"stuNum":19,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997709489},{"id":"brILtbkGkvsGA20G3JXx","name":"이윤수","score":1010,"grade":6,"classNum":3,"stuNum":16,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412626927},{"id":"bs2CywUpCdI3rjAAT6mQ","name":"박서준","score":1580,"grade":6,"classNum":3,"stuNum":6,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413388724},{"id":"cFztRGkFHkN2NFFQBPLG","name":"서예지","score":530,"grade":6,"classNum":1,"stuNum":9,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506756052},{"id":"cSvMss7teoHeNtOPHFQR","name":"김재민","score":540,"grade":6,"classNum":2,"stuNum":5,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783988517821},{"id":"cWfFpaWMDInAbZuNsGIH","name":"오주호","score":950,"grade":6,"classNum":3,"stuNum":11,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779413205144},{"id":"cmlfzl6XysgDa6MGccsd","name":"신리윤","score":990,"grade":6,"classNum":3,"stuNum":10,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412651241},{"id":"d49KZAuLL6xGPoWResuL","name":"김민지","score":830,"grade":6,"classNum":5,"stuNum":3,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329257676},{"id":"dNY7ra7ggGB3L2DEu766","name":"오한울","score":830,"grade":6,"classNum":5,"stuNum":15,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329912691},{"id":"dQAMk38YgeoM8sHRL3qv","name":"신민규","score":460,"grade":6,"classNum":5,"stuNum":14,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164206365},{"id":"dSbaLY8rczYNDRHwRnSf","name":"박재준","score":530,"grade":6,"classNum":1,"stuNum":8,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506681356},{"id":"deush6uWCsx0jEbdwNy7","name":"김수현","score":840,"grade":6,"classNum":1,"stuNum":3,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325892903},{"id":"driH3KNnsf5SChWJR7Xp","name":"이효인","score":890,"grade":6,"classNum":3,"stuNum":18,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412693179},{"id":"e4TuOqIKr7xivRFiWNuH","name":"박서준","score":740,"grade":6,"classNum":6,"stuNum":9,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057497052},{"id":"eBMRbUYmz5vgpGX8DQFX","name":"권범","score":790,"grade":6,"classNum":5,"stuNum":2,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329209612},{"id":"eGtceRYd2BHU5zxTgm05","name":"이온유","score":900,"grade":6,"classNum":3,"stuNum":14,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226367317},{"id":"ea4fezmwwzmuDCJoIRhO","name":"박소현","score":530,"grade":6,"classNum":1,"stuNum":7,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506851460},{"id":"ebY8GZ8aSFWGADu8FJqu","name":"박푸름","score":580,"grade":6,"classNum":6,"stuNum":10,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057465501},{"id":"evBDMxMVRGYeWWPDSeGL","name":"조아라","score":800,"grade":6,"classNum":5,"stuNum":23,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329356676},{"id":"fA29h2FMXAJ2IYH36iCi","name":"박서윤","score":640,"grade":6,"classNum":5,"stuNum":10,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164123044},{"id":"fMjvW2R3xxLujEUBsapG","name":"김현중","score":940,"grade":6,"classNum":5,"stuNum":9,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329937036},{"id":"fWRRIikludVDZ1JCJxke","name":"심재엽","score":1010,"grade":6,"classNum":2,"stuNum":13,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335629245},{"id":"fekr1suRTojSLr75bsMh","name":"김수현","score":790,"grade":6,"classNum":5,"stuNum":6,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329945510},{"id":"ffZpqjC7aujG4CNG725E","name":"송민채","score":880,"grade":6,"classNum":4,"stuNum":12,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146968226},{"id":"fpB6gGsszwyedvxWrio3","name":"심현석","score":1100,"grade":6,"classNum":1,"stuNum":14,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325857015},{"id":"fpkAXdtPRMhWRFygHY6z","name":"심은율","score":860,"grade":6,"classNum":2,"stuNum":12,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781233079413},{"id":"fqEx11gUfNZXSXyj8FIv","name":"김태양","score":850,"grade":6,"classNum":4,"stuNum":8,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146942084},{"id":"g8xjPIqvhvh0FrHdff52","name":"손슬아","score":610,"grade":6,"classNum":1,"stuNum":11,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506728290},{"id":"g9w6nToUWlFaJQ5OiUyH","name":"장준우","score":700,"grade":6,"classNum":1,"stuNum":21,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325877414},{"id":"gJc445QrdmlpZUG3E3qj","name":"이준우","score":1030,"grade":6,"classNum":3,"stuNum":17,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779413149013},{"id":"gQWc5aCGDgMH2ncKFyEU","name":"이준희","score":960,"grade":6,"classNum":1,"stuNum":20,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325892936},{"id":"gVbKVFpXNQ8PzFgF0YsI","name":"김유리","score":950,"grade":6,"classNum":3,"stuNum":5,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226329022},{"id":"gY8rh4siNtRcZrjsqWiI","name":"오한울","score":630,"grade":6,"classNum":5,"stuNum":15,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784163905309},{"id":"gdHXCP44AjbVpRploBuS","name":"김시현","score":680,"grade":6,"classNum":3,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783994972274},{"id":"gheSyTlO44joDPqAExBe","name":"김성민","score":830,"grade":6,"classNum":1,"stuNum":2,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325870590},{"id":"gwJWz4mrHZNhjaaHtUqg","name":"신리윤","score":1000,"grade":6,"classNum":3,"stuNum":10,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226460778},{"id":"h5vy6PylZuUx0pVbYStX","name":"홍재윤","score":660,"grade":6,"classNum":3,"stuNum":24,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995228815},{"id":"hPby63UUAnwSc66AmcoV","name":"황지원","score":840,"grade":6,"classNum":3,"stuNum":25,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412704792},{"id":"hSy0q3ue5KV9d910chpU","name":"석예준","score":850,"grade":6,"classNum":5,"stuNum":13,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329462816},{"id":"hfeWBUTvoL4YI2M73fby","name":"김소중","score":980,"grade":6,"classNum":5,"stuNum":5,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144067683},{"id":"hmyyGR7nGF0GF2aM0tnU","name":"정은채","score":680,"grade":6,"classNum":4,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997645134},{"id":"hnlEN5TuGtr68B8WL3mW","name":"전수현","score":480,"grade":6,"classNum":4,"stuNum":18,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997798617},{"id":"hr4oBBXO7MIYJdI5bUWr","name":"김민채","score":700,"grade":6,"classNum":3,"stuNum":3,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412677631},{"id":"i0WdjHkg5wwvouDSFWix","name":"홍라은","score":590,"grade":6,"classNum":6,"stuNum":24,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080875875},{"id":"i991tq6mWidvGLbarJwV","name":"이예원","score":910,"grade":6,"classNum":1,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325862560},{"id":"iFR73cXtjg3dyzEYXVXU","name":"신민규","score":850,"grade":6,"classNum":5,"stuNum":14,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329974608},{"id":"iPbhSAc7eRGlgEo5Wgyh","name":"김지원","score":780,"grade":6,"classNum":2,"stuNum":6,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335630751},{"id":"iSk7ODL73o5DAk4N4WA2","name":"윤예은","score":760,"grade":6,"classNum":2,"stuNum":14,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232964427},{"id":"ihWplyyeg6wPVGkENNbB","name":"차민엽","score":560,"grade":6,"classNum":1,"stuNum":24,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506705002},{"id":"ivtlxrJlAQTVuO4vEqKC","name":"김소중","score":1080,"grade":6,"classNum":5,"stuNum":5,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329339986},{"id":"j5IlC5xwE6vJRMM6gBxH","name":"조아영","score":630,"grade":6,"classNum":3,"stuNum":21,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995058547},{"id":"jV1J4mEwkWSN70LMw7mw","name":"김민성","score":960,"grade":6,"classNum":1,"stuNum":1,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325882121},{"id":"jm7ZgTXqkGhDzUUZQUig","name":"이도현","score":1040,"grade":6,"classNum":2,"stuNum":17,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335666425},{"id":"jsjSFM0AnCCzzkJJ3SNt","name":"송제원","score":690,"grade":6,"classNum":3,"stuNum":9,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226384011},{"id":"jyGOgB0i3np70BDHgNyY","name":"박소람","score":940,"grade":6,"classNum":2,"stuNum":10,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781837905064},{"id":"jzmruinm06e9hatVZAec","name":"신혜미","score":820,"grade":6,"classNum":2,"stuNum":11,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335663837},{"id":"k2kYgF44UvqNKDvl3acP","name":"이온유","score":1450,"grade":6,"classNum":3,"stuNum":14,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413389434},{"id":"kA7fGMnGSuow7cc1yq22","name":"이규민","score":910,"grade":6,"classNum":5,"stuNum":17,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329989376},{"id":"kHlTZVwe7fhrsM8j7TFg","name":"김시현","score":930,"grade":6,"classNum":3,"stuNum":4,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226191399},{"id":"kZBh1SHiRIlSwhJ3kaGh","name":"lian","score":860,"grade":6,"classNum":6,"stuNum":2,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057488765},{"id":"kbQszOFfg4KS5UnkUSkV","name":"고우영(무꼬끼)","score":560,"grade":6,"classNum":2,"stuNum":1,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335632888},{"id":"kdLbrdDz8mLtKv5UgVrE","name":"팽서아","score":860,"grade":6,"classNum":5,"stuNum":24,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329194580},{"id":"kwvO34UklmDPp1ttE6jB","name":"김서형","score":730,"grade":6,"classNum":5,"stuNum":4,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329970477},{"id":"lAVt4G8K8M3q5CQ6D58r","name":"정의현","score":1580,"grade":6,"classNum":3,"stuNum":201,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413377069},{"id":"lBt4rs2v5VxQ7O8TWQQX","name":"★☆✡김현중✡☆★","score":1600,"grade":6,"classNum":5,"stuNum":9,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779375577878},{"id":"lN0PDpe90mwUxdCMb7jM","name":"유재아","score":700,"grade":6,"classNum":6,"stuNum":16,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784163902069},{"id":"lVXZAJ9vM4DMoASBf4Vs","name":"김주원","score":650,"grade":6,"classNum":6,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080759039},{"id":"lgLdWU1qdoF1lCIfi2qA","name":"정예린","score":330,"grade":6,"classNum":6,"stuNum":19,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080809756},{"id":"liTYDrvOx03j718JTaxW","name":"성예준","score":1080,"grade":6,"classNum":1,"stuNum":10,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325873512},{"id":"ljo9m2vfDXt6D8xe1QQA","name":"이윤서","score":840,"grade":6,"classNum":2,"stuNum":18,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335626783},{"id":"lmywft6nX5StVKKaQTmO","name":"이강필 gangpil","score":810,"grade":6,"classNum":2,"stuNum":15,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335643232},{"id":"lxd0OWGEvbp2DSntegKq","name":"팽서아","score":960,"grade":6,"classNum":5,"stuNum":24,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329930923},{"id":"m2zbwccW3R9P8wxmStym","name":"이도헌","score":460,"grade":6,"classNum":1,"stuNum":18,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506741134},{"id":"m7Nzxpks5OgFLKDUnHkh","name":"최은호","score":900,"grade":6,"classNum":6,"stuNum":21,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057514134},{"id":"mFLj2WPq7UoS1Q6eaZrZ","name":"이우진","score":890,"grade":6,"classNum":3,"stuNum":15,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226404688},{"id":"mIEGTT2i57O5stTUKCdx","name":"정시윤","score":740,"grade":6,"classNum":1,"stuNum":22,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325890599},{"id":"mO3bW78ny1iOMjYAPLu6","name":"백윤재","score":890,"grade":6,"classNum":6,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057504196},{"id":"mP6Z9npbUMTdCrwfwSYD","name":"김리안","score":680,"grade":6,"classNum":6,"stuNum":2,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080897634},{"id":"mQ5IO6ALond0dUkntFM1","name":"김채윤","score":920,"grade":6,"classNum":2,"stuNum":7,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232797912},{"id":"mQaeq08bumI6Mynf0pjP","name":"최시윤","score":560,"grade":6,"classNum":6,"stuNum":20,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080772710},{"id":"meReYyDgnvi96YcjlHur","name":"정여민","score":900,"grade":6,"classNum":5,"stuNum":21,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329366489},{"id":"mgofxfQtRFVBLmLkfKJO","name":"김의명","score":700,"grade":6,"classNum":2,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783988507078},{"id":"mid3EdPJfvUqYERc1czk","name":"김민채","score":1400,"grade":6,"classNum":3,"stuNum":3,"unitId":"BtncFIJTVDoq4gJm6yf9","unitTitle":"L01","createdAt":1779413332305},{"id":"mihQSUam3IyKNXegVmIa","name":"이세인","score":610,"grade":6,"classNum":3,"stuNum":13,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995073180},{"id":"mj8NISHKyeykoqZXoFfv","name":"유봄","score":770,"grade":6,"classNum":1,"stuNum":15,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140656998},{"id":"mlj57ycIzMBpOtkBvE1f","name":"신민규","score":690,"grade":6,"classNum":5,"stuNum":14,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144206699},{"id":"msE8NWcVj2qkXv4cLpbX","name":"이유건","score":810,"grade":6,"classNum":5,"stuNum":19,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329277218},{"id":"n3adDksWvdOcY83Yiuz2","name":"최온유","score":590,"grade":6,"classNum":1,"stuNum":25,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506744029},{"id":"n6ka2oRJIe1R7mDam7JP","name":"포비곰젤리","score":640,"grade":6,"classNum":2,"stuNum":16,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783988532496},{"id":"nD2rHopeDR8bs1blReDb","name":"박정율","score":840,"grade":6,"classNum":4,"stuNum":11,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765033308},{"id":"nGW3BZldq4IGqpe0Krgl","name":"이규원","score":940,"grade":6,"classNum":3,"stuNum":12,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226536289},{"id":"nnqoDFHAmpk8bxFAFKuW","name":"강다원","score":680,"grade":6,"classNum":5,"stuNum":1,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784163940611},{"id":"o9tfBV8Mv9WDUHKcB22m","name":"조아라","score":680,"grade":6,"classNum":5,"stuNum":23,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164160294},{"id":"okcOLOBNYTOnjEVLQHOC","name":"권범","score":960,"grade":6,"classNum":5,"stuNum":2,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143904733},{"id":"opB7Z6G8wAN8mLbwUeWO","name":"정시윤","score":610,"grade":6,"classNum":1,"stuNum":22,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506999470},{"id":"pRN5ASytll383lQZ04E0","name":"한태희","score":820,"grade":6,"classNum":3,"stuNum":23,"unitId":"Oq4er2FMoobnYy1JFF7k","unitTitle":"L04","createdAt":1779413161767},{"id":"pad9JkBXBGia0boBP2Uw","name":"박시후","score":860,"grade":6,"classNum":5,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143954409},{"id":"pqBYZdWmW1xqxbFgNPq7","name":"명종도","score":900,"grade":6,"classNum":2,"stuNum":8,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232916814},{"id":"pxnG3IvGScRHpfBkX9cZ","name":"오한울","score":970,"grade":6,"classNum":5,"stuNum":15,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329277740},{"id":"q401jKkg1yleEh3PIHlP","name":"송수민","score":980,"grade":6,"classNum":1,"stuNum":12,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140641286},{"id":"q5ckqHdeMBGNl9DC9sXJ","name":"이준우","score":960,"grade":6,"classNum":3,"stuNum":17,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226351847},{"id":"qANqGdUBmsfD8ZNsfh0z","name":"김민성","score":930,"grade":6,"classNum":1,"stuNum":1,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140654937},{"id":"qN4LqXmpeKVsDTECjEZi","name":"류호재","score":790,"grade":6,"classNum":1,"stuNum":6,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325861688},{"id":"qgUXoGm0psQ7wzofS3rP","name":"이시현","score":630,"grade":6,"classNum":5,"stuNum":19,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164095975},{"id":"rEpdHNXSyEAEDIYABLsN","name":"김태이","score":660,"grade":6,"classNum":4,"stuNum":9,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997592023},{"id":"rM5lU6KjS66JnwSDS2YH","name":"김재민","score":710,"grade":6,"classNum":2,"stuNum":5,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335646590},{"id":"rYwRhX7x3d5VdphemmZG","name":"이규민","score":890,"grade":6,"classNum":5,"stuNum":17,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329324347},{"id":"rd2gKoTETNZOB2IK43uj","name":"김지유","score":660,"grade":6,"classNum":1,"stuNum":4,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784506780658},{"id":"rjqQ4YNAWZTXCzNtPDSB","name":"박푸름","score":130,"grade":6,"classNum":6,"stuNum":10,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080846595},{"id":"rmPuBB7jKg4Yqo7XZyvu","name":"김수현","score":760,"grade":6,"classNum":1,"stuNum":3,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140677537},{"id":"s2edU0OyrASk15j1DFCR","name":"김지유","score":1000,"grade":6,"classNum":1,"stuNum":4,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140633284},{"id":"seLsTVL8vdlocfMgZZAP","name":"차민엽","score":830,"grade":6,"classNum":1,"stuNum":24,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140748947},{"id":"sf6wtjb7in9pmmeTJEe0","name":"김민재","score":940,"grade":6,"classNum":2,"stuNum":3,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232831140},{"id":"ss4vZHHwtrj0Why8OaB3","name":"wjddbcks","score":890,"grade":6,"classNum":1,"stuNum":23,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140801406},{"id":"swXtxuzopkIMdL9VqZhj","name":"강다원","score":1040,"grade":6,"classNum":5,"stuNum":1,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329189113},{"id":"tAHRxXdmUXKBnuLiQBZD","name":"선생님","score":0,"grade":6,"classNum":1,"stuNum":30,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325918021},{"id":"tLMKnIPDKIGTOjTkJSsO","name":"김가원","score":880,"grade":6,"classNum":3,"stuNum":2,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226213117},{"id":"tX0YxuaE6SOUftsAseoD","name":"유봄","score":830,"grade":6,"classNum":1,"stuNum":15,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325888844},{"id":"tfDnNDEdJ2SA8E3iOJK8","name":"김진서","score":740,"grade":6,"classNum":4,"stuNum":7,"unitId":"XXT0gN7KTgvZuPlVv7C3","unitTitle":"L03","createdAt":1779765044744},{"id":"trGfrciZQENLqhnjNW7G","name":"김지원","score":680,"grade":6,"classNum":2,"stuNum":4,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232775704},{"id":"tsGNvw9KSij1pICEGOuU","name":"오주호","score":840,"grade":6,"classNum":3,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781226227062},{"id":"u4TdT10nN8UeFyrR4sZc","name":"김태양","score":840,"grade":5,"classNum":4,"stuNum":8,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779332043247},{"id":"uCMsBeXkBCwhFxVrfySJ","name":"유재아","score":980,"grade":6,"classNum":5,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143808425},{"id":"uIAFwZxj8vLWevf3pwPT","name":"이시현","score":960,"grade":6,"classNum":5,"stuNum":19,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781144018848},{"id":"uf3TaxgM9SEb3ZjmuAmY","name":"김민지","score":620,"grade":6,"classNum":5,"stuNum":3,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164057212},{"id":"uoYLlqia1dDSC5XD3mHy","name":"김이든","score":850,"grade":6,"classNum":5,"stuNum":7,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143935068},{"id":"vBYretfsvzyGn86x7vTl","name":"심현석","score":980,"grade":6,"classNum":1,"stuNum":14,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140632518},{"id":"vMpzWgYnJGthn3EZJYHa","name":"이도윤","score":960,"grade":6,"classNum":2,"stuNum":16,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781233212449},{"id":"vRJxGrmDhdBgicthE3xa","name":"최준우(6767)","score":590,"grade":6,"classNum":2,"stuNum":23,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335667788},{"id":"vrbaz94aviORYQONyKSg","name":"송수민","score":880,"grade":6,"classNum":1,"stuNum":12,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325880976},{"id":"w1JEvFZdv4XXvL4NXRwV","name":"정예원","score":930,"grade":6,"classNum":2,"stuNum":20,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779335637874},{"id":"wDEBxEjPMwFFsQqb0S4V","name":"이규원","score":940,"grade":6,"classNum":3,"stuNum":12,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779413385485},{"id":"wLIPvAduXPd78G8sBvwU","name":"주이든","score":1000,"grade":6,"classNum":2,"stuNum":22,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232833569},{"id":"wPdT1AC6HuqdGEa95dHI","name":"조윤영","score":660,"grade":3,"classNum":1,"stuNum":20,"unitId":"MNdfNU4PQwgjJ8jryWl4","unitTitle":"3G L07","createdAt":1789690399871},{"id":"wQSB0aLnJx2KihItSK3B","name":"손슬아","score":980,"grade":6,"classNum":1,"stuNum":11,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140653668},{"id":"wUHPrdbuLZLKTA5VBWcU","name":"유재아","score":1060,"grade":6,"classNum":5,"stuNum":16,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329201321},{"id":"wamd8DAerJCwSKW8YrJo","name":"이소민","score":230,"grade":3,"classNum":1,"stuNum":13,"unitId":"MNdfNU4PQwgjJ8jryWl4","unitTitle":"3G L07","createdAt":1789690404066},{"id":"wgCVrFuuCRSqI06YQFwr","name":"신리윤","score":590,"grade":6,"classNum":3,"stuNum":10,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783995070642},{"id":"x9fiHMOk3smD8laZs0Dt","name":"김준우","score":870,"grade":6,"classNum":6,"stuNum":5,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057524606},{"id":"xBw0ALxNc4x3XsfJE5Fv","name":"이미뉴","score":680,"grade":6,"classNum":6,"stuNum":16,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784080716769},{"id":"xERVMkTqpq8LGSSccj0K","name":"김시현","score":820,"grade":6,"classNum":3,"stuNum":4,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779412668911},{"id":"xEeBuD16taRQTrp0Jb2J","name":"박정율","score":540,"grade":6,"classNum":4,"stuNum":11,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1783997594938},{"id":"xEpxAfPGQdPvA6y4Fq4p","name":"서예지","score":670,"grade":6,"classNum":1,"stuNum":9,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140718022},{"id":"xNep28BHgdKgYJC2yqSl","name":"김재민","score":730,"grade":6,"classNum":2,"stuNum":5,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232812572},{"id":"xPDW0k6FSZZLIQPYHCD5","name":"이준희","score":760,"grade":6,"classNum":1,"stuNum":20,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140794018},{"id":"xPjHa27qUPo6uHVGxodB","name":"백주은","score":980,"grade":6,"classNum":6,"stuNum":12,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057474634},{"id":"xTUSGvKcgwhAEaBEVdwT","name":"김은솔","score":880,"grade":6,"classNum":4,"stuNum":5,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146936058},{"id":"xYcRX7atuWKzTeOFxnXU","name":"심서현","score":1100,"grade":6,"classNum":1,"stuNum":13,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779325887448},{"id":"xcyxVaJ0jWAhGigM2r0X","name":"황지원","score":820,"grade":6,"classNum":3,"stuNum":25,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779413321930},{"id":"xjqfGBHbGqasN6uQAECO","name":"김강호","score":960,"grade":6,"classNum":2,"stuNum":2,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781232869226},{"id":"y8xW6G3YEAwSYnMsk9vV","name":"이규민","score":720,"grade":6,"classNum":5,"stuNum":17,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781143942245},{"id":"yKdFR6BFEp7Vh4nUUBNN","name":"정하이","score":430,"grade":6,"classNum":5,"stuNum":22,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164188027},{"id":"yrhMHWyRm3V043ACCF5e","name":"김진서","score":570,"grade":6,"classNum":5,"stuNum":7,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781146910036},{"id":"ysjh059CHKVBmoOCdDHf","name":"함지희","score":810,"grade":6,"classNum":5,"stuNum":25,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779329969348},{"id":"yuQcrCAwj0uWbNYVjPNs","name":"김이든","score":990,"grade":6,"classNum":5,"stuNum":7,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779330401019},{"id":"z6oYo6aKCMldJOXrZX3B","name":"석예준","score":540,"grade":6,"classNum":5,"stuNum":13,"unitId":"sWJcTfESmOY2MiN802T8","unitTitle":"L07","createdAt":1784164105944},{"id":"zJgVh3KarQckwCngyDox","name":"장준우","score":980,"grade":6,"classNum":1,"stuNum":21,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781140694912},{"id":"zVXpDRSm1iIOFTxOMvTo","name":"조아영","score":990,"grade":6,"classNum":3,"stuNum":21,"unitId":"xV9eZlK28gJv55Z6L19X","unitTitle":"L05","createdAt":1779413296908},{"id":"ztZy3gbswYy3lLNelONi","name":"홍삼십","score":880,"grade":6,"classNum":6,"stuNum":30,"unitId":"pt6TLKTaPprxJ9AN7XKQ","unitTitle":"L06","createdAt":1781057484640}];
+
+
+        function formatUnitTitle(title) {
+            if (!title) return '단원';
+            const t = String(title).trim();
+            const lMatch = t.match(/^L0*(\d+)$/i);
+            if (lMatch) {
+                return t + ' (' + parseInt(lMatch[1], 10) + '단원)';
+            }
+            const gMatch = t.match(/^(\d+)G\s*L0*(\d+)$/i);
+            if (gMatch) {
+                return t + ' (' + gMatch[1] + '학년 ' + parseInt(gMatch[2], 10) + '단원)';
+            }
+            return t;
+        }
+
+        function sortUnits(units) {
+            if (!Array.isArray(units)) return [];
+            return [...units].sort((a, b) => {
+                const getOrderKey = (title) => {
+                    const t = (title || '').trim();
+                    const lMatch = t.match(/^L0*(\d+)/i);
+                    if (lMatch) return [1, parseInt(lMatch[1], 10)];
+                    const gMatch = t.match(/^(\d+)G\s*L0*(\d+)/i);
+                    if (gMatch) return [2, parseInt(gMatch[1], 10), parseInt(gMatch[2], 10)];
+                    return [3, t];
+                };
+                const keyA = getOrderKey(a.title);
+                const keyB = getOrderKey(b.title);
+                if (keyA[0] !== keyB[0]) return keyA[0] - keyB[0];
+                if (keyA[0] === 1) return keyA[1] - keyB[1];
+                if (keyA[0] === 2) {
+                    if (keyA[1] !== keyB[1]) return keyA[1] - keyB[1];
+                    return keyA[2] - keyB[2];
+                }
+                return (a.title || '').localeCompare(b.title || '', 'ko', { numeric: true });
+            });
+        }
+
         // 기본 상태
         const state = {
             units: [],
@@ -918,6 +1198,21 @@
         function maskSingleName(name) {
             if (!name) return '';
             const s = name.trim();
+            const match = s.match(/^([^가-힣a-zA-Z0-9]*)([가-힣a-zA-Z0-9].*?)([^가-힣a-zA-Z0-9]*)$/);
+            if (match) {
+                const prefix = match[1];
+                const core = match[2];
+                const suffix = match[3];
+                let maskedCore = core;
+                if (core.length === 2) {
+                    maskedCore = core[0] + 'O';
+                } else if (core.length === 3) {
+                    maskedCore = core[0] + 'O' + core[2];
+                } else if (core.length > 3) {
+                    maskedCore = core[0] + 'O'.repeat(core.length - 2) + core[core.length - 1];
+                }
+                return prefix + maskedCore + suffix;
+            }
             if (s.length <= 1) return s;
             if (s.length === 2) return s[0] + 'O';
             if (s.length === 3) return s[0] + 'O' + s[2];
@@ -1320,6 +1615,8 @@
                     score: typeof totalScore === 'number' ? totalScore : 0,
                     createdAt: Date.now()
                 };
+                state.scores.unshift({ id: 'local_' + Date.now(), ...docData });
+                filterHofList();
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'scores'), docData);
             } catch (e) {
                 console.warn("Score save notice:", e);
@@ -1689,6 +1986,13 @@
             const unsubs = [];
             const scoresMap = new Map();
 
+            // 기존 점수(내장 데이터 또는 이전 로컬 점수) 프리시드
+            if (state.scores && state.scores.length > 0) {
+                state.scores.forEach(s => {
+                    if (s.id) scoresMap.set(s.id, s);
+                });
+            }
+
             targetAppIds.forEach(aId => {
                 try {
                     const scoresRef = collection(db, 'artifacts', aId, 'public', 'data', 'scores');
@@ -1719,6 +2023,7 @@
             const container = document.getElementById('hof-records-container');
             if (!container) return;
 
+            const u = document.getElementById('hof-filter-unit') ? document.getElementById('hof-filter-unit').value : 'ALL';
             const g = document.getElementById('hof-filter-grade') ? document.getElementById('hof-filter-grade').value : 'ALL';
             const c = document.getElementById('hof-filter-class') ? document.getElementById('hof-filter-class').value : 'ALL';
 
@@ -1728,6 +2033,12 @@
             const oneWeekAgoMs = now.getTime() - 7 * 24 * 60 * 60 * 1000;
 
             let filtered = state.scores.filter(item => {
+                if (u !== 'ALL') {
+                    const unitObj = state.units.find(un => un.id === u);
+                    const matchId = item.unitId === u;
+                    const matchTitle = (unitObj && item.unitTitle === unitObj.title) || item.unitTitle === u;
+                    if (!matchId && !matchTitle) return false;
+                }
                 if (g !== 'ALL' && String(item.grade) !== g) return false;
                 if (c !== 'ALL' && String(item.classNum) !== c) return false;
 
@@ -1782,6 +2093,8 @@
                 else if (rank === 2) rankBadge = '<span class="text-xl">🥈</span>';
                 else if (rank === 3) rankBadge = '<span class="text-xl">🥉</span>';
 
+                const unitDisplay = formatUnitTitle(item.unitTitle || '단원');
+
                 return `
                     <div class="flex items-center justify-between p-2.5 bg-white border border-blue-100 rounded-xl hover:border-blue-300 transition shadow-2xs">
                         <div class="flex items-center gap-3">
@@ -1794,7 +2107,7 @@
                                     <span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800">${item.score}점</span>
                                 </div>
                                 <div class="text-[11px] text-slate-400 font-medium">
-                                    ${item.affiliation || '소속 정보 없음'} · <span class="text-slate-500">${item.unitTitle || '단원'}</span>
+                                    ${item.affiliation || '소속 정보 없음'} · <span class="text-slate-500">${unitDisplay}</span>
                                 </div>
                             </div>
                         </div>
@@ -1891,52 +2204,59 @@
                     }
                 }
 
-                state.units = Array.from(unitMap.values());
-
-                if (state.units.length === 0) {
-                    loadDefaultUnits();
-                } else {
-                    state.units.sort((a, b) => {
-                        if (a.title && b.title) {
-                            return a.title.localeCompare(b.title, 'ko', { numeric: true });
-                        }
-                        return (b.createdAt || 0) - (a.createdAt || 0);
-                    });
+                if (unitMap.size > 0) {
+                    state.units = sortUnits(Array.from(unitMap.values()));
+                } else if (!state.units || state.units.length === 0) {
+                    state.units = sortUnits(LEGACY_DEFAULT_UNITS);
                 }
 
                 updateUnitDropdowns();
             } catch (e) {
                 console.error("fetchUnits error:", e);
-                loadDefaultUnits();
+                if (!state.units || state.units.length === 0) {
+                    state.units = sortUnits(LEGACY_DEFAULT_UNITS);
+                }
                 updateUnitDropdowns();
             }
         }
 
         function loadDefaultUnits() {
-            state.units = [
-                { id: "def-fruit", title: "과일 단어 떼 (Fruit)", targets: ["apple", "banana", "orange", "grape", "melon"], createdAt: Date.now() },
-                { id: "def-animal", title: "동물 단어 떼 (Animal)", targets: ["lion", "tiger", "bear", "rabbit", "monkey"], createdAt: Date.now() },
-                { id: "def-school", title: "학교 물건 단어 떼 (School)", targets: ["pencil", "eraser", "ruler", "desk", "chair"], createdAt: Date.now() }
-            ];
+            state.units = sortUnits(LEGACY_DEFAULT_UNITS);
         }
 
         function updateUnitDropdowns() {
             const homeSelect = document.getElementById('homeUnitSelect');
+            const hofFilterUnit = document.getElementById('hof-filter-unit');
             const teacherList = document.getElementById('teacher-unit-list');
             const scoreFilterUnit = document.getElementById('filter-score-unit');
 
             if (homeSelect) {
                 homeSelect.innerHTML = '<option value="">단원을 선택해주세요</option>';
                 state.units.forEach(u => {
-                    homeSelect.innerHTML += `<option value="${u.id}">${u.title}</option>`;
+                    const formatted = formatUnitTitle(u.title);
+                    homeSelect.innerHTML += `<option value="${u.id}">${formatted}</option>`;
                 });
                 if (state.units.length > 0) homeSelect.value = state.units[0].id;
+            }
+
+            if (hofFilterUnit) {
+                const currentHofVal = hofFilterUnit.value || 'ALL';
+                hofFilterUnit.innerHTML = '<option value="ALL">전체 단원</option>';
+                state.units.forEach(u => {
+                    const formatted = formatUnitTitle(u.title);
+                    hofFilterUnit.innerHTML += `<option value="${u.id}">${formatted}</option>`;
+                });
+                if ([...hofFilterUnit.options].some(o => o.value === currentHofVal)) {
+                    hofFilterUnit.value = currentHofVal;
+                } else {
+                    hofFilterUnit.value = 'ALL';
+                }
             }
 
             if (scoreFilterUnit) {
                 scoreFilterUnit.innerHTML = '<option value="all">모든 단원</option>';
                 state.units.forEach(u => {
-                    scoreFilterUnit.innerHTML += `<option value="${u.id}">${u.title}</option>`;
+                    scoreFilterUnit.innerHTML += `<option value="${u.id}">${formatUnitTitle(u.title)}</option>`;
                 });
             }
 
@@ -1949,7 +2269,7 @@
                         return `
                             <div class="flex justify-between items-center py-2 px-2 hover:bg-slate-50">
                                 <div>
-                                    <div class="font-bold text-slate-800 text-xs">${u.title}</div>
+                                    <div class="font-bold text-slate-800 text-xs">${formatUnitTitle(u.title)}</div>
                                     <div class="text-[11px] text-slate-400 truncate max-w-xs">${targetsStr}</div>
                                 </div>
                                 <button type="button" onclick="deleteTeacherUnit('${u.id}')" class="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded text-[11px] font-bold">
@@ -2083,22 +2403,29 @@
         // ════════════════════════════════════════════════════════════════════
         // ── 5. 초기화 실행 ──
         // ════════════════════════════════════════════════════════════════════
+        // 1. 즉시 로컬 데이터 동기 렌더링 (0ms) - file:/// 로 열어도 즉시 1단원 및 역대 랭킹 표시
+        state.units = sortUnits(LEGACY_DEFAULT_UNITS);
+        state.scores = [...LEGACY_DEFAULT_SCORES];
+        refreshStudentProfile();
+        updateUnitDropdowns();
+        filterHofList();
+        window.showScreen('screen-home');
+
+        // 2. 비동기 백그라운드 클라우드 동기화 (성공 시 최신 데이터로 자연스럽게 병합 갱신)
         async function initApp() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    await signInWithCustomToken(auth, __initial_auth_token).catch(() => {});
                 } else {
-                    await signInAnonymously(auth);
+                    await signInAnonymously(auth).catch(() => {});
                 }
             } catch(e) {
                 console.warn("Auth notice:", e);
             }
 
-            refreshStudentProfile();
-            await fetchConfig();
-            await fetchUnits();
+            fetchConfig().catch(() => {});
+            fetchUnits().catch(() => {});
             listenToScoresRealtime();
-            window.showScreen('screen-home');
         }
 
         onAuthStateChanged(auth, (user) => {
