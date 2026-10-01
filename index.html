@@ -200,34 +200,35 @@
 
         /* 단어 날아가는 애니메이션 */
         @keyframes flyRight {
-            0% { left: -50%; transform: scale(0.9) translateY(10px) rotate(-5deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { left: 150%; transform: scale(1.1) translateY(-10px) rotate(5deg); opacity: 0; }
+            0% { left: -40%; transform: scale(0.9) translateY(8px) rotate(-4deg); opacity: 0; }
+            12% { opacity: 1; }
+            88% { opacity: 1; }
+            100% { left: 140%; transform: scale(1.05) translateY(-8px) rotate(4deg); opacity: 0; }
         }
         @keyframes flyLeft {
-            0% { left: 150%; transform: scale(1.1) translateY(10px) rotate(5deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { left: -50%; transform: scale(0.9) translateY(-10px) rotate(-5deg); opacity: 0; }
+            0% { left: 140%; transform: scale(1.05) translateY(8px) rotate(4deg); opacity: 0; }
+            12% { opacity: 1; }
+            88% { opacity: 1; }
+            100% { left: -40%; transform: scale(0.9) translateY(-8px) rotate(-4deg); opacity: 0; }
         }
 
         .flying-word {
             position: absolute;
             font-family: 'Jua', 'Pretendard', sans-serif;
-            font-size: clamp(3.5rem, 7vw, 7.5rem);
+            font-size: clamp(2.4rem, 4.8vw, 4.5rem);
             white-space: nowrap;
             user-select: none;
             text-shadow: 
-                5px 5px 0px #fff, -5px -5px 0px #fff, 
-                5px -5px 0px #fff, -5px 5px 0px #fff,
-                0px 5px 0px #fff, 0px -5px 0px #fff,
-                5px 0px 0px #fff, -5px 0px 0px #fff,
-                8px 8px 15px rgba(0,0,0,0.15);
+                4px 4px 0px #fff, -4px -4px 0px #fff, 
+                4px -4px 0px #fff, -4px 4px 0px #fff,
+                0px 4px 0px #fff, 0px -4px 0px #fff,
+                4px 0px 0px #fff, -4px 0px 0px #fff,
+                6px 6px 14px rgba(0,0,0,0.12);
             opacity: 0;
             z-index: 10;
             pointer-events: none;
             will-change: left, opacity, transform;
+            animation-fill-mode: both !important;
         }
 
         /* 토스트 팝업 */
@@ -535,16 +536,42 @@
                     <div id="game-live-list" class="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar text-xs"></div>
                 </div>
 
+                <!-- 3초 시작 카운트다운 오버레이 -->
+                <div id="game-countdown-overlay" class="hidden absolute inset-0 z-30 bg-slate-900/65 backdrop-blur-xs flex flex-col items-center justify-center pointer-events-none">
+                    <div class="text-center space-y-3 animate-fade-in">
+                        <div class="text-xs font-black tracking-widest text-emerald-300 uppercase">단어 떼 집중 준비!</div>
+                        <div id="game-countdown-num" class="text-8xl sm:text-9xl font-black text-white drop-shadow-2xl font-jua">3</div>
+                        <div class="text-white text-sm sm:text-base font-bold bg-slate-800/90 px-6 py-2.5 rounded-full border border-slate-600 shadow-xl flex items-center justify-center gap-2">
+                            <span>🎯 찾을 단어:</span>
+                            <span id="game-countdown-target" class="text-amber-300 font-black text-xl tracking-wide">word</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비행 진행 상태바 (타이머) -->
+                <div id="game-flight-timer-container" class="hidden absolute top-20 left-1/2 -translate-x-1/2 z-20 w-80 max-w-[90%] bg-white/95 backdrop-blur px-4 py-2.5 rounded-2xl shadow-lg border border-slate-200 pointer-events-none">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-600 mb-1.5">
+                        <span class="flex items-center gap-1.5"><span class="animate-pulse">🐝</span> 단어 떼가 날아가는 중! (개수를 세어보세요)</span>
+                        <span id="game-flight-timer-text" class="text-blue-600 font-mono font-black text-sm">6.5s</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div id="game-flight-timer-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-100" style="width: 100%;"></div>
+                    </div>
+                </div>
+
                 <!-- 단어 날아가는 캔버스 영역 -->
                 <div id="game-canvas" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
 
                 <!-- 하단 정답 입력창 (단어 떼 애니메이션 종료 시 팝업) -->
-                <div id="answer-input-container" class="opacity-0 pointer-events-none transition-opacity duration-500 pb-8 flex justify-center z-20 w-full px-4">
-                    <div class="bg-white rounded-3xl shadow-2xl p-4 border-4 border-emerald-300 flex flex-col items-center w-full max-w-xs">
-                        <p class="text-slate-800 font-black mb-2 text-base text-center">🎯 정답 단어는 총 몇 개였나요?</p>
+                <div id="answer-input-container" class="opacity-0 pointer-events-none transition-all duration-500 pb-8 flex justify-center z-20 w-full px-4">
+                    <div class="bg-white rounded-3xl shadow-2xl p-5 border-4 border-emerald-400 flex flex-col items-center w-full max-w-sm">
+                        <p class="text-slate-800 font-black mb-1 text-base text-center">🎯 정답 단어는 총 몇 개였나요?</p>
+                        <p class="text-slate-500 font-bold mb-3 text-xs text-center">찾을 단어: <span id="answer-target-word-hint" class="text-blue-600 font-black text-sm">word</span></p>
                         <div class="flex gap-2 w-full justify-center items-center">
-                            <input type="number" id="game-answer" class="w-24 h-12 rounded-xl border-2 border-slate-200 text-center text-2xl font-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-slate-50" placeholder="숫자">
-                            <button type="button" id="btn-submit-answer" onclick="submitAnswer()" class="bg-blue-600 hover:bg-blue-700 text-white h-12 px-6 rounded-xl font-black text-base shadow transition">
+                            <button type="button" onclick="adjustAnswer(-1)" class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xl flex items-center justify-center transition shadow-xs active:scale-95" title="1 감소">-</button>
+                            <input type="number" id="game-answer" min="0" max="99" class="w-24 h-12 rounded-xl border-2 border-slate-200 text-center text-2xl font-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-slate-50" placeholder="0">
+                            <button type="button" onclick="adjustAnswer(1)" class="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xl flex items-center justify-center transition shadow-xs active:scale-95" title="1 증가">+</button>
+                            <button type="button" id="btn-submit-answer" onclick="submitAnswer()" class="bg-blue-600 hover:bg-blue-700 text-white h-12 px-6 rounded-xl font-black text-base shadow transition active:scale-95">
                                 확인
                             </button>
                         </div>
@@ -1104,9 +1131,23 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             roomListenerUnsubscribe: null,
             scoresUnsubscribe: null,
             animationTimeout: null,
+            countdownInterval: null,
+            flightTimerInterval: null,
             isSubmitting: false,
             hofPeriod: 'all'
         };
+
+        function clearAllTimers() {
+            if (state.animationTimeout) { clearTimeout(state.animationTimeout); state.animationTimeout = null; }
+            if (state.countdownInterval) { clearInterval(state.countdownInterval); state.countdownInterval = null; }
+            if (state.flightTimerInterval) { clearInterval(state.flightTimerInterval); state.flightTimerInterval = null; }
+            const canvas = document.getElementById('game-canvas');
+            if (canvas) canvas.innerHTML = '';
+            const countdownOverlay = document.getElementById('game-countdown-overlay');
+            if (countdownOverlay) countdownOverlay.classList.add('hidden');
+            const timerContainer = document.getElementById('game-flight-timer-container');
+            if (timerContainer) timerContainer.classList.add('hidden');
+        }
 
         // 토스트 메시지
         window.showToast = (msg) => {
@@ -1119,10 +1160,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
         // 화면 전환 함수
         window.showScreen = (screenId) => {
-            if (state.animationTimeout) {
-                clearTimeout(state.animationTimeout);
-                state.animationTimeout = null;
-            }
+            clearAllTimers();
             const screens = ['screen-home', 'screen-lobby', 'screen-game', 'screen-round-result', 'screen-final-result', 'screen-teacher'];
             screens.forEach(id => {
                 const el = document.getElementById(id);
@@ -1160,7 +1198,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         };
 
         window.backToHome = () => {
-            if (state.animationTimeout) { clearTimeout(state.animationTimeout); state.animationTimeout = null; }
+            clearAllTimers();
             cleanupRoomListener();
             state.roomCode = null;
             state.isSubmitting = false;
@@ -1353,8 +1391,46 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         // ════════════════════════════════════════════════════════════════════
         // ── 1. 1인 연습 모드 (혼자서 바로 플레이) ──
         // ════════════════════════════════════════════════════════════════════
+        function playCountdownTone(freq = 440) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.25);
+            } catch(e) {}
+        }
+
+        window.adjustAnswer = (delta) => {
+            const input = document.getElementById('game-answer');
+            if (!input || input.disabled) return;
+            let val = parseInt(input.value, 10);
+            if (isNaN(val)) val = 0;
+            val = Math.max(0, Math.min(99, val + delta));
+            input.value = val;
+            input.focus();
+        };
+
         window.startSoloGame = () => {
             refreshStudentProfile();
+
+            // 학생 정보 미등록 시 로그인 모달 유도 (와우리말 공통 정책 준수)
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.requireLogin === 'function') {
+                if (!window.WaurimalStudent.requireLogin("Swarm 1인 집중력 연습")) return;
+            } else if (!state.studentInfo.name || state.studentInfo.name === '도전자' || state.studentInfo.name === '학생') {
+                alert("게임을 시작하려면 먼저 상단 GNB에서 학생 정보(학교, 학년, 반, 번호, 이름)를 등록(로그인)해야 합니다.");
+                if (window.WaurimalStudent?.openModal) window.WaurimalStudent.openModal();
+                return;
+            }
+
             let unitSelect = document.getElementById('homeUnitSelect');
             let unitId = unitSelect ? unitSelect.value : '';
             const difficulty = (document.getElementById('homeDifficultySelect') && document.getElementById('homeDifficultySelect').value) || 'normal';
@@ -1390,24 +1466,105 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         };
 
         function startRound() {
+            clearAllTimers();
             state.isSubmitting = false;
             state.currentTargetWord = state.gameWords[state.currentRoundIndex] || "word";
+
             document.getElementById('game-target-word').innerText = state.currentTargetWord;
             document.getElementById('game-progress').innerText = `${state.currentRoundIndex + 1} / ${state.gameWords.length}`;
-            document.getElementById('game-answer').value = '';
-            document.getElementById('game-answer').disabled = true;
+            
+            const hintEl = document.getElementById('answer-target-word-hint');
+            if (hintEl) hintEl.innerText = state.currentTargetWord;
+
+            const inputField = document.getElementById('game-answer');
+            if (inputField) {
+                inputField.value = '';
+                inputField.disabled = true;
+            }
+
+            const inputContainer = document.getElementById('answer-input-container');
+            if (inputContainer) {
+                inputContainer.classList.add('opacity-0', 'pointer-events-none');
+                inputContainer.classList.remove('opacity-100');
+            }
+
+            const timerContainer = document.getElementById('game-flight-timer-container');
+            if (timerContainer) timerContainer.classList.add('hidden');
+
+            const canvas = document.getElementById('game-canvas');
+            if (canvas) canvas.innerHTML = '';
 
             window.showScreen('screen-game');
 
-            if (state.animationTimeout) clearTimeout(state.animationTimeout);
-
-            const inputContainer = document.getElementById('answer-input-container');
-            inputContainer.classList.add('opacity-0', 'pointer-events-none');
-            inputContainer.classList.remove('opacity-100');
-
-            setTimeout(() => {
+            // 3초 준비 카운트다운 시작 후 단어 떼 비행 가동
+            startRoundCountdown(() => {
                 startGameAnimation();
-            }, 50);
+            });
+        }
+
+        function startRoundCountdown(onComplete) {
+            const overlay = document.getElementById('game-countdown-overlay');
+            const numEl = document.getElementById('game-countdown-num');
+            const targetEl = document.getElementById('game-countdown-target');
+            if (!overlay || !numEl) {
+                if (typeof onComplete === 'function') onComplete();
+                return;
+            }
+
+            if (targetEl) targetEl.innerText = state.currentTargetWord;
+            overlay.classList.remove('hidden');
+
+            let count = 3;
+            numEl.innerText = count;
+            playCountdownTone(523.25); // C5
+
+            state.countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numEl.innerText = count;
+                    numEl.classList.remove('animate-ping');
+                    void numEl.offsetWidth;
+                    numEl.classList.add('animate-ping');
+                    playCountdownTone(523.25 + (3 - count) * 65);
+                } else if (count === 0) {
+                    numEl.innerText = '시작!';
+                    numEl.classList.remove('animate-ping');
+                    void numEl.offsetWidth;
+                    numEl.classList.add('animate-ping');
+                    playCountdownTone(783.99); // G5
+                } else {
+                    clearInterval(state.countdownInterval);
+                    state.countdownInterval = null;
+                    overlay.classList.add('hidden');
+                    if (typeof onComplete === 'function') onComplete();
+                }
+            }, 750);
+        }
+
+        function startFlightProgressBar(totalSec) {
+            const timerContainer = document.getElementById('game-flight-timer-container');
+            const timerText = document.getElementById('game-flight-timer-text');
+            const timerBar = document.getElementById('game-flight-timer-bar');
+            if (!timerContainer || !timerText || !timerBar) return;
+
+            timerContainer.classList.remove('hidden');
+            let remainingMs = Math.ceil(totalSec * 1000);
+            const totalMs = remainingMs;
+
+            timerText.innerText = (remainingMs / 1000).toFixed(1) + 's';
+            timerBar.style.width = '100%';
+
+            state.flightTimerInterval = setInterval(() => {
+                remainingMs -= 100;
+                if (remainingMs <= 0) {
+                    remainingMs = 0;
+                    clearInterval(state.flightTimerInterval);
+                    state.flightTimerInterval = null;
+                }
+                timerText.innerText = (remainingMs / 1000).toFixed(1) + 's';
+                const pct = Math.max(0, (remainingMs / totalMs) * 100);
+                timerBar.style.width = `${pct}%`;
+            }, 100);
         }
 
         function generateAutoDistractors(word, count) {
@@ -1442,28 +1599,33 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         }
 
         function startGameAnimation() {
+            clearAllTimers();
             const canvas = document.getElementById('game-canvas');
-            canvas.innerHTML = '';
+            if (canvas) canvas.innerHTML = '';
 
-            const textColors = ["#1e293b", "#ef4444", "#2563eb", "#10b981", "#8b5cf6", "#f59e0b"];
+            const textColors = ["#1e293b", "#dc2626", "#2563eb", "#059669", "#7c3aed", "#d97706", "#db2777"];
             const diff = state.studentInfo?.difficulty || 'normal';
 
-            let minTarget = 4, maxTarget = 8, minDur = 8, addDur = 6, spawnInterval = 1.8;
-            if (diff === 'easy') { minTarget = 3; maxTarget = 6; minDur = 10; addDur = 5; spawnInterval = 2.5; }
-            else if (diff === 'hard') { minTarget = 6; maxTarget = 10; minDur = 6; addDur = 5; spawnInterval = 1.2; }
+            // 난이도별 최적화: 생동감 있게 가로지르는 단어 떼 (총 6.5~8초 소요)
+            let minTarget = 4, maxTarget = 7, minDur = 2.8, addDur = 0.7, spawnInterval = 0.28;
+            if (diff === 'easy') {
+                minTarget = 3; maxTarget = 5; minDur = 3.4; addDur = 0.8; spawnInterval = 0.35;
+            } else if (diff === 'hard') {
+                minTarget = 5; maxTarget = 9; minDur = 2.2; addDur = 0.6; spawnInterval = 0.20;
+            }
 
             state.gameTargetCount = Math.floor(Math.random() * (maxTarget - minTarget + 1)) + minTarget;
-            const distractorCount = Math.floor(state.gameTargetCount * (1.5 + Math.random() * 0.5));
+            const distractorCount = Math.floor(state.gameTargetCount * (1.3 + Math.random() * 0.4));
             const autoDistractors = generateAutoDistractors(state.currentTargetWord, 10);
 
             let words = [];
-            for(let i=0; i<state.gameTargetCount; i++) words.push({ text: state.currentTargetWord, isTarget: true });
-            for(let i=0; i<distractorCount; i++) words.push({ text: autoDistractors[Math.floor(Math.random() * autoDistractors.length)], isTarget: false });
+            for (let i = 0; i < state.gameTargetCount; i++) words.push({ text: state.currentTargetWord, isTarget: true });
+            for (let i = 0; i < distractorCount; i++) words.push({ text: autoDistractors[Math.floor(Math.random() * autoDistractors.length)], isTarget: false });
             words.sort(() => Math.random() - 0.5);
 
             playBGM();
 
-            const lanes = [8, 20, 32, 44, 56];
+            const lanes = [10, 24, 38, 52, 66];
             let lastLane = -1;
             let maxAnimationTime = 0;
 
@@ -1479,8 +1641,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 lastLane = laneIdx;
 
                 const topPercent = lanes[laneIdx] + (Math.random() * 4 - 2);
-                const duration = Math.random() * addDur + minDur;
-                const delay = (index * spawnInterval) + (Math.random() * (spawnInterval * 0.3));
+                const duration = minDur + (Math.random() * addDur);
+                const delay = (index * spawnInterval) + (Math.random() * (spawnInterval * 0.25));
 
                 const totalTime = duration + delay;
                 if (totalTime > maxAnimationTime) maxAnimationTime = totalTime;
@@ -1490,26 +1652,35 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
                 el.style.top = `${topPercent}%`;
                 el.style.color = color;
-                void el.offsetWidth;
-                el.style.animation = `${direction} ${duration}s linear ${delay}s forwards`;
+                el.style.animation = `${direction} ${duration.toFixed(2)}s linear ${delay.toFixed(2)}s both`;
                 if (!wordObj.isTarget && Math.random() > 0.5) el.style.fontWeight = '400';
 
                 canvas.appendChild(el);
             });
 
+            // 실시간 비행 진행 게이지 (타이머 바) 가동
+            startFlightProgressBar(maxAnimationTime);
+
             state.animationTimeout = setTimeout(() => {
+                // 비행 완료 후 캔버스 청소 및 정답 입력창 팝업
+                if (canvas) canvas.innerHTML = '';
+                const timerContainer = document.getElementById('game-flight-timer-container');
+                if (timerContainer) timerContainer.classList.add('hidden');
+
                 const answerContainer = document.getElementById('answer-input-container');
                 if (answerContainer) {
                     answerContainer.classList.remove('opacity-0', 'pointer-events-none');
                     answerContainer.classList.add('opacity-100');
 
                     const answerInputBox = document.getElementById('game-answer');
-                    answerInputBox.disabled = false;
-                    answerInputBox.focus();
-
+                    if (answerInputBox) {
+                        answerInputBox.disabled = false;
+                        answerInputBox.value = '';
+                        setTimeout(() => answerInputBox.focus(), 50);
+                    }
                     playInputReadySound();
                 }
-            }, (maxAnimationTime * 1000) + 400);
+            }, Math.ceil(maxAnimationTime * 1000) + 200);
         }
 
         window.submitAnswer = async function() {
@@ -1668,11 +1839,34 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             });
         }
 
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const roundScreen = document.getElementById('screen-round-result');
+                if (roundScreen && !roundScreen.classList.contains('hidden')) {
+                    const btn = roundScreen.querySelector('button');
+                    if (btn) {
+                        e.preventDefault();
+                        btn.click();
+                    }
+                }
+            }
+        });
+
         // ════════════════════════════════════════════════════════════════════
         // ── 2. 멀티플레이어 모드 (1:1 & 팀 대결) ──
         // ════════════════════════════════════════════════════════════════════
         window.createGameRoom = async (mode) => {
             refreshStudentProfile();
+
+            // 학생 정보 미등록 시 로그인 모달 유도
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.requireLogin === 'function') {
+                if (!window.WaurimalStudent.requireLogin("대결 방 만들기")) return;
+            } else if (!state.studentInfo.name || state.studentInfo.name === '도전자' || state.studentInfo.name === '학생') {
+                alert("방을 생성하려면 먼저 상단 GNB에서 학생 정보(학교, 학년, 반, 번호, 이름)를 등록(로그인)해야 합니다.");
+                if (window.WaurimalStudent?.openModal) window.WaurimalStudent.openModal();
+                return;
+            }
+
             const unitId = document.getElementById('homeUnitSelect').value;
             const difficulty = document.getElementById('homeDifficultySelect').value;
 
@@ -1726,6 +1920,16 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
         window.joinGameRoom = async () => {
             refreshStudentProfile();
+
+            // 학생 정보 미등록 시 로그인 모달 유도
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.requireLogin === 'function') {
+                if (!window.WaurimalStudent.requireLogin("대결 방 입장")) return;
+            } else if (!state.studentInfo.name || state.studentInfo.name === '도전자' || state.studentInfo.name === '학생') {
+                alert("방에 입장하려면 먼저 상단 GNB에서 학생 정보(학교, 학년, 반, 번호, 이름)를 등록(로그인)해야 합니다.");
+                if (window.WaurimalStudent?.openModal) window.WaurimalStudent.openModal();
+                return;
+            }
+
             const roomCode = document.getElementById('homeRoomInput').value.trim();
             const msgEl = document.getElementById('homeLobbyMsg');
             msgEl.innerText = "";
@@ -2047,7 +2251,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             };
         }
 
-        window.filterHofList = () => {
+        function filterHofList() {
             const container = document.getElementById('hof-records-container');
             if (!container) return;
 
@@ -2146,7 +2350,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                     </div>
                 `;
             }).join('');
-        };
+        }
+        window.filterHofList = filterHofList;
 
         // ════════════════════════════════════════════════════════════════════
         // ── 4. 교사 모드 ──
