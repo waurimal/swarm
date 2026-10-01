@@ -525,6 +525,11 @@
                         <div class="text-slate-500 font-bold text-xs whitespace-nowrap">
                             진행: <span id="game-progress" class="text-emerald-600 font-black text-sm ml-1">1 / 5</span>
                         </div>
+                        <div class="w-px h-5 bg-slate-300"></div>
+                        <div class="text-slate-500 font-bold text-xs whitespace-nowrap flex items-center gap-1.5">
+                            <span>⏱️ 비행:</span>
+                            <span id="game-flight-timer-text" class="text-blue-600 font-mono font-black text-sm">준비</span>
+                        </div>
                     </div>
                     <button type="button" onclick="confirmExitGame()" class="bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg font-bold text-xs pointer-events-auto hover:bg-slate-700 transition flex items-center gap-1.5">
                         <span>나가기</span> <i class="fas fa-sign-out-alt"></i>
@@ -551,15 +556,9 @@
                     </div>
                 </div>
 
-                <!-- 비행 진행 상태바 (타이머) -->
-                <div id="game-flight-timer-container" class="hidden absolute top-20 left-1/2 -translate-x-1/2 z-20 w-80 max-w-[90%] bg-white/95 backdrop-blur px-4 py-2.5 rounded-2xl shadow-lg border border-slate-200 pointer-events-none">
-                    <div class="flex justify-between items-center text-xs font-bold text-slate-600 mb-1.5">
-                        <span class="flex items-center gap-1.5"><span class="animate-pulse">🐝</span> 단어 떼가 날아가는 중! (개수를 세어보세요)</span>
-                        <span id="game-flight-timer-text" class="text-blue-600 font-mono font-black text-sm">6.5s</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                        <div id="game-flight-timer-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-100" style="width: 100%;"></div>
-                    </div>
+                <!-- 비행 진행 상태바 (화면 최상단 엣지에 슬림하게 밀착하여 단어 가림 100% 방지) -->
+                <div id="game-flight-timer-container" class="hidden absolute top-0 left-0 right-0 z-20 h-1.5 bg-slate-100/70 overflow-hidden pointer-events-none">
+                    <div id="game-flight-timer-bar" class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 transition-all duration-100" style="width: 100%;"></div>
                 </div>
 
                 <!-- 단어 날아가는 캔버스 영역 -->
@@ -1475,6 +1474,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
             document.getElementById('game-target-word').innerText = state.currentTargetWord;
             document.getElementById('game-progress').innerText = `${state.currentRoundIndex + 1} / ${state.gameWords.length}`;
+            const timerText = document.getElementById('game-flight-timer-text');
+            if (timerText) timerText.innerText = '준비';
             
             const hintEl = document.getElementById('answer-target-word-hint');
             if (hintEl) hintEl.innerText = state.currentTargetWord;
@@ -1639,7 +1640,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
             playBGM();
 
-            const lanes = [10, 24, 38, 52, 66];
+            const lanes = [20, 34, 48, 62, 76];
             let lastLane = -1;
             let maxAnimationTime = 0;
 
@@ -1679,7 +1680,12 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 // 비행 완료 후 캔버스 청소 및 정답 입력창 팝업
                 if (canvas) canvas.innerHTML = '';
                 const timerContainer = document.getElementById('game-flight-timer-container');
-                if (timerContainer) timerContainer.classList.add('hidden');
+                if (timerContainer) {
+                    timerContainer.classList.add('hidden');
+                    timerContainer.style.display = 'none';
+                }
+                const timerText = document.getElementById('game-flight-timer-text');
+                if (timerText) timerText.innerText = '종료';
 
                 const answerContainer = document.getElementById('answer-input-container');
                 if (answerContainer) {
