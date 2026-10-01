@@ -1144,9 +1144,15 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             const canvas = document.getElementById('game-canvas');
             if (canvas) canvas.innerHTML = '';
             const countdownOverlay = document.getElementById('game-countdown-overlay');
-            if (countdownOverlay) countdownOverlay.classList.add('hidden');
+            if (countdownOverlay) {
+                countdownOverlay.classList.add('hidden');
+                countdownOverlay.style.display = 'none';
+            }
             const timerContainer = document.getElementById('game-flight-timer-container');
-            if (timerContainer) timerContainer.classList.add('hidden');
+            if (timerContainer) {
+                timerContainer.classList.add('hidden');
+                timerContainer.style.display = 'none';
+            }
         }
 
         // 토스트 메시지
@@ -1422,15 +1428,6 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         window.startSoloGame = () => {
             refreshStudentProfile();
 
-            // 학생 정보 미등록 시 로그인 모달 유도 (와우리말 공통 정책 준수)
-            if (window.WaurimalStudent && typeof window.WaurimalStudent.requireLogin === 'function') {
-                if (!window.WaurimalStudent.requireLogin("Swarm 1인 집중력 연습")) return;
-            } else if (!state.studentInfo.name || state.studentInfo.name === '도전자' || state.studentInfo.name === '학생') {
-                alert("게임을 시작하려면 먼저 상단 GNB에서 학생 정보(학교, 학년, 반, 번호, 이름)를 등록(로그인)해야 합니다.");
-                if (window.WaurimalStudent?.openModal) window.WaurimalStudent.openModal();
-                return;
-            }
-
             let unitSelect = document.getElementById('homeUnitSelect');
             let unitId = unitSelect ? unitSelect.value : '';
             const difficulty = (document.getElementById('homeDifficultySelect') && document.getElementById('homeDifficultySelect').value) || 'normal';
@@ -1458,6 +1455,9 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
             state.gameWords = [...targetsArray].sort(() => Math.random() - 0.5);
             if (state.gameWords.length > 5) state.gameWords = state.gameWords.slice(0, 5); // 5라운드
+            if (!state.gameWords || state.gameWords.length === 0) {
+                state.gameWords = ["apple", "banana", "orange", "grape", "melon"];
+            }
 
             state.currentRoundIndex = 0;
             state.roundResults = [];
@@ -1489,7 +1489,10 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             }
 
             const timerContainer = document.getElementById('game-flight-timer-container');
-            if (timerContainer) timerContainer.classList.add('hidden');
+            if (timerContainer) {
+                timerContainer.classList.add('hidden');
+                timerContainer.style.display = 'none';
+            }
 
             const canvas = document.getElementById('game-canvas');
             if (canvas) canvas.innerHTML = '';
@@ -1513,6 +1516,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
             if (targetEl) targetEl.innerText = state.currentTargetWord;
             overlay.classList.remove('hidden');
+            overlay.style.removeProperty('display');
+            overlay.style.display = 'flex';
 
             let count = 3;
             numEl.innerText = count;
@@ -1536,6 +1541,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                     clearInterval(state.countdownInterval);
                     state.countdownInterval = null;
                     overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
                     if (typeof onComplete === 'function') onComplete();
                 }
             }, 750);
@@ -1548,6 +1554,9 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             if (!timerContainer || !timerText || !timerBar) return;
 
             timerContainer.classList.remove('hidden');
+            timerContainer.style.removeProperty('display');
+            timerContainer.style.display = 'block';
+
             let remainingMs = Math.ceil(totalSec * 1000);
             const totalMs = remainingMs;
 
@@ -1560,6 +1569,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                     remainingMs = 0;
                     clearInterval(state.flightTimerInterval);
                     state.flightTimerInterval = null;
+                    timerContainer.classList.add('hidden');
+                    timerContainer.style.display = 'none';
                 }
                 timerText.innerText = (remainingMs / 1000).toFixed(1) + 's';
                 const pct = Math.max(0, (remainingMs / totalMs) * 100);
@@ -1857,15 +1868,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         // ════════════════════════════════════════════════════════════════════
         window.createGameRoom = async (mode) => {
             refreshStudentProfile();
-
-            // 학생 정보 미등록 시 로그인 모달 유도
-            if (window.WaurimalStudent && typeof window.WaurimalStudent.requireLogin === 'function') {
-                if (!window.WaurimalStudent.requireLogin("대결 방 만들기")) return;
-            } else if (!state.studentInfo.name || state.studentInfo.name === '도전자' || state.studentInfo.name === '학생') {
-                alert("방을 생성하려면 먼저 상단 GNB에서 학생 정보(학교, 학년, 반, 번호, 이름)를 등록(로그인)해야 합니다.");
-                if (window.WaurimalStudent?.openModal) window.WaurimalStudent.openModal();
-                return;
-            }
+            if (!state.studentInfo.name) state.studentInfo.name = "도전자";
 
             const unitId = document.getElementById('homeUnitSelect').value;
             const difficulty = document.getElementById('homeDifficultySelect').value;
@@ -1920,15 +1923,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
         window.joinGameRoom = async () => {
             refreshStudentProfile();
-
-            // 학생 정보 미등록 시 로그인 모달 유도
-            if (window.WaurimalStudent && typeof window.WaurimalStudent.requireLogin === 'function') {
-                if (!window.WaurimalStudent.requireLogin("대결 방 입장")) return;
-            } else if (!state.studentInfo.name || state.studentInfo.name === '도전자' || state.studentInfo.name === '학생') {
-                alert("방에 입장하려면 먼저 상단 GNB에서 학생 정보(학교, 학년, 반, 번호, 이름)를 등록(로그인)해야 합니다.");
-                if (window.WaurimalStudent?.openModal) window.WaurimalStudent.openModal();
-                return;
-            }
+            if (!state.studentInfo.name) state.studentInfo.name = "도전자";
 
             const roomCode = document.getElementById('homeRoomInput').value.trim();
             const msgEl = document.getElementById('homeLobbyMsg');
