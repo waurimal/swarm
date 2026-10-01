@@ -1123,6 +1123,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             studentInfo: { grade: 6, classNum: 1, stuNum: 1, name: "도전자", difficulty: "normal", mode: "1인용 게임" },
             userId: null,
             gameWords: [],
+            targetCounts: [],
             currentRoundIndex: 0,
             currentTargetWord: '',
             gameTargetCount: 0,
@@ -1138,6 +1139,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             isSubmitting: false,
             hofPeriod: 'all'
         };
+        window.swarmState = state;
+        window.generateDistributedTargetCounts = generateDistributedTargetCounts;
 
         function clearAllTimers() {
             if (state.animationTimeout) { clearTimeout(state.animationTimeout); state.animationTimeout = null; }
@@ -1461,6 +1464,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 state.gameWords = ["apple", "banana", "orange", "grape", "melon"];
             }
 
+            state.targetCounts = generateDistributedTargetCounts(state.gameWords.length);
             state.currentRoundIndex = 0;
             state.roundResults = [];
             state.totalScore = 0;
@@ -1613,6 +1617,24 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             return Array.from(results);
         }
 
+        // 0부터 10까지 골고루 분산된 라운드별 정답 개수 생성 함수 (특정 수에 몰리지 않고 0~10 고른 분포 보장)
+        function generateDistributedTargetCounts(numRounds = 5) {
+            const strata = [
+                [0, 1],
+                [2, 3],
+                [4, 5, 6],
+                [7, 8],
+                [9, 10]
+            ];
+            let counts = [];
+            while (counts.length < numRounds) {
+                const set = strata.map(s => s[Math.floor(Math.random() * s.length)]);
+                set.sort(() => Math.random() - 0.5);
+                counts.push(...set);
+            }
+            return counts.slice(0, numRounds);
+        }
+
         function startGameAnimation() {
             clearAllTimers();
             const canvas = document.getElementById('game-canvas');
@@ -1621,21 +1643,48 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
             const textColors = ["#1e293b", "#dc2626", "#2563eb", "#059669", "#7c3aed", "#d97706", "#db2777"];
             const diff = state.studentInfo?.difficulty || 'normal';
 
-            // 난이도별 최적화: 생동감 있게 가로지르는 단어 떼 (총 6.5~8초 소요)
-            let minTarget = 4, maxTarget = 7, minDur = 2.8, addDur = 0.7, spawnInterval = 0.28;
+            // 난이도별 최적화 (속도 및 간격): 생동감 있게 가로지르는 단어 떼 (총 6.5~7.5초 소요)
+            let minDur = 2.8, addDur = 0.7, spawnInterval = 0.26;
             if (diff === 'easy') {
-                minTarget = 3; maxTarget = 5; minDur = 3.4; addDur = 0.8; spawnInterval = 0.35;
+                minDur = 3.4; addDur = 0.8; spawnInterval = 0.34;
             } else if (diff === 'hard') {
-                minTarget = 5; maxTarget = 9; minDur = 2.2; addDur = 0.6; spawnInterval = 0.20;
+                minDur = 2.0; addDur = 0.5; spawnInterval = 0.18;
             }
 
-            state.gameTargetCount = Math.floor(Math.random() * (maxTarget - minTarget + 1)) + minTarget;
-            const distractorCount = Math.floor(state.gameTargetCount * (1.3 + Math.random() * 0.4));
+            // 0부터 10까지 골고루 분산된 정답 개수 적용
+            if (state.targetCounts && state.targetCounts[state.currentRoundIndex] !== undefined) {
+                state.gameTargetCount = state.targetCounts[state.currentRoundIndex];
+            } else {
+                state.gameTargetCount = Math.floor(Math.random() * 11);
+            }
+
+            // 함정(오답) 단어 수 결정: 정답 개수가 0이거나 적을 때도 충분한 단어 떼가 날아가도록 보정 (총 8~14단어)
+            let distractorCount;
+            if (state.gameTargetCount === 0) {
+                distractorCount = Math.floor(Math.random() * 3) + 8; // 8~10개 (목표 단어 0개 + 함정 8~10개)
+            } else if (state.gameTargetCount <= 2) {
+                distractorCount = Math.floor(Math.random() * 3) + 7; // 7~9개
+            } else if (state.gameTargetCount <= 5) {
+                distractorCount = Math.floor(Math.random() * 3) + 5; // 5~7개
+            } else if (state.gameTargetCount <= 8) {
+                distractorCount = Math.floor(Math.random() * 3) + 4; // 4~6개
+            } else {
+                distractorCount = Math.floor(Math.random() * 3) + 3; // 3~5개
+            }
+
+            // 현재 단원의 다른 단어들과 자동 생성된 철자 유사 오답들을 골고루 혼합
+            const otherUnitWords = (state.currentUnit?.targets || []).filter(w => w !== state.currentTargetWord);
             const autoDistractors = generateAutoDistractors(state.currentTargetWord, 10);
+            const distractorPool = otherUnitWords.length > 0 ? [...otherUnitWords, ...autoDistractors] : autoDistractors;
 
             let words = [];
-            for (let i = 0; i < state.gameTargetCount; i++) words.push({ text: state.currentTargetWord, isTarget: true });
-            for (let i = 0; i < distractorCount; i++) words.push({ text: autoDistractors[Math.floor(Math.random() * autoDistractors.length)], isTarget: false });
+            for (let i = 0; i < state.gameTargetCount; i++) {
+                words.push({ text: state.currentTargetWord, isTarget: true });
+            }
+            for (let i = 0; i < distractorCount; i++) {
+                const randomDistractor = distractorPool[Math.floor(Math.random() * distractorPool.length)];
+                words.push({ text: randomDistractor, isTarget: false });
+            }
             words.sort(() => Math.random() - 0.5);
 
             playBGM();
@@ -1898,6 +1947,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
             let gameWords = [...targetsArray].sort(() => Math.random() - 0.5);
             if (gameWords.length > 5) gameWords = gameWords.slice(0, 5);
+            const targetCounts = generateDistributedTargetCounts(gameWords.length);
+            state.targetCounts = targetCounts;
 
             const initialRoomDoc = {
                 roomCode, mode, difficulty,
@@ -1906,6 +1957,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 status: 'waiting',
                 createdAt: Date.now(),
                 gameWords,
+                targetCounts,
                 players: {
                     [state.userId]: {
                         uid: state.userId,
@@ -2007,6 +2059,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
                 if (roomData.status === 'playing' && document.getElementById('screen-game').classList.contains('hidden') && document.getElementById('screen-round-result').classList.contains('hidden') && document.getElementById('screen-final-result').classList.contains('hidden')) {
                     state.gameWords = roomData.gameWords;
+                    state.targetCounts = roomData.targetCounts || generateDistributedTargetCounts(state.gameWords.length);
                     state.currentRoundIndex = 0;
                     state.roundResults = [];
                     state.totalScore = 0;
