@@ -1171,6 +1171,12 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
         // 화면 전환 함수
         window.showScreen = (screenId) => {
+            if (screenId === 'screen-teacher') {
+                if (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated()) {
+                    window.openTeacherAuthModal();
+                    return;
+                }
+            }
             clearAllTimers();
             const screens = ['screen-home', 'screen-lobby', 'screen-game', 'screen-round-result', 'screen-final-result', 'screen-teacher'];
             screens.forEach(id => {
@@ -2085,10 +2091,13 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                     if (isMe) teamBtn = `<button type="button" onclick="toggleMyTeam()" class="${p.team === 'blue' ? 'bg-blue-600' : 'bg-red-600'} text-white px-3 py-1 rounded-lg text-xs font-bold">${p.team === 'blue' ? '🔵 청팀' : '🔴 홍팀'}</button>`;
                     else teamBtn = `<span class="${p.team === 'blue' ? 'text-blue-600 bg-blue-50' : 'text-red-600 bg-red-50'} px-2.5 py-1 rounded-lg font-bold text-xs">${p.team === 'blue' ? '청팀' : '홍팀'}</span>`;
                 }
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(p.name || '') : (p.name || '');
+                const safeGrade = window.WaurimalSanitize ? window.WaurimalSanitize(String(p.grade || '')) : (p.grade || '');
+                const safeClass = window.WaurimalSanitize ? window.WaurimalSanitize(String(p.classNum || '')) : (p.classNum || '');
                 return `
                     <div class="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
                         <div class="flex items-center text-xs font-bold text-slate-800">
-                            ${hostBadge}<span>${p.grade}학년 ${p.classNum}반 ${p.name}</span>
+                            ${hostBadge}<span>${safeGrade}학년 ${safeClass}반 ${safeName}</span>
                         </div>
                         <div>${teamBtn}</div>
                     </div>
@@ -2175,9 +2184,10 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 document.getElementById('game-live-list').innerHTML = playersList.map((p, idx) => {
                     const badge = roomData.mode === '팀 대결 게임' ? (p.team === 'blue' ? '🔵' : '🔴') : '';
                     const status = p.isFinished ? '✅' : `${p.currentRound || 0}/${totalRounds}`;
+                    const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(p.name || '') : (p.name || '');
                     return `
                         <div class="flex justify-between items-center gap-3 text-xs ${p.uid === state.userId ? 'font-black text-blue-600' : 'text-slate-600'}">
-                            <span class="truncate">${badge} ${idx+1}. ${p.name}</span>
+                            <span class="truncate">${badge} ${idx+1}. ${safeName}</span>
                             <div class="flex items-center gap-1.5 font-mono">
                                 <span class="text-[10px] text-slate-400">${status}</span>
                                 <span>${p.score}점</span>
@@ -2204,7 +2214,8 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 winBanner.classList.remove('hidden');
                 teamScoreboard.classList.add('hidden');
                 if (players.length > 0) {
-                    winBanner.innerText = `🏆 현재 1위: ${players[0].name} (${players[0].score}점) ${statusText}`;
+                    const safeFirst = window.WaurimalSanitize ? window.WaurimalSanitize(players[0].name || '') : (players[0].name || '');
+                    winBanner.innerText = `🏆 현재 1위: ${safeFirst} (${players[0].score}점) ${statusText}`;
                 }
             } else if (roomData.mode === '팀 대결 게임') {
                 winBanner.classList.remove('hidden');
@@ -2240,11 +2251,15 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                     ? `<span class="ml-1.5 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">완료</span>`
                     : `<span class="ml-1.5 text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded font-bold">${p.currentRound || 0}/${totalRounds}</span>`;
 
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(p.name || '') : (p.name || '');
+                const safeGrade = window.WaurimalSanitize ? window.WaurimalSanitize(String(p.grade || '')) : (p.grade || '');
+                const safeClass = window.WaurimalSanitize ? window.WaurimalSanitize(String(p.classNum || '')) : (p.classNum || '');
+
                 return `
                     <tr class="border-b border-slate-100 text-xs">
                         <td class="p-2 text-center text-slate-400 font-bold">${idx + 1}</td>
-                        <td class="p-2 text-slate-600">${p.grade}학년 ${p.classNum}반</td>
-                        <td class="p-2 font-black text-slate-800 flex items-center">${p.name}${teamBadge}${statusHtml}</td>
+                        <td class="p-2 text-slate-600">${safeGrade}학년 ${safeClass}반</td>
+                        <td class="p-2 font-black text-slate-800 flex items-center">${safeName}${teamBadge}${statusHtml}</td>
                         <td class="p-2 text-right text-blue-600 font-black">${p.score}점</td>
                     </tr>
                 `;
@@ -2383,6 +2398,9 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 else if (rank === 3) rankBadge = '<span class="text-xl">🥉</span>';
 
                 const unitDisplay = formatUnitTitle(item.unitTitle || '단원');
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(item.maskedName || '') : (item.maskedName || '');
+                const safeAffil = window.WaurimalSanitize ? window.WaurimalSanitize(item.affiliation || '소속 정보 없음') : (item.affiliation || '소속 정보 없음');
+                const safeUnit = window.WaurimalSanitize ? window.WaurimalSanitize(unitDisplay) : unitDisplay;
 
                 return `
                     <div class="flex items-center justify-between p-2.5 bg-white border border-blue-100 rounded-xl hover:border-blue-300 transition shadow-2xs">
@@ -2392,11 +2410,11 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                             </div>
                             <div>
                                 <div class="font-black text-slate-800 text-xs flex items-center gap-1.5">
-                                    <span>${item.maskedName}</span>
+                                    <span>${safeName}</span>
                                     <span class="text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800">${item.score}점</span>
                                 </div>
                                 <div class="text-[11px] text-slate-400 font-medium">
-                                    ${item.affiliation || '소속 정보 없음'} · <span class="text-slate-500">${unitDisplay}</span>
+                                    ${safeAffil} · <span class="text-slate-500">${safeUnit}</span>
                                 </div>
                             </div>
                         </div>
@@ -2414,6 +2432,13 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         // ── 4. 교사 모드 ──
         // ════════════════════════════════════════════════════════════════════
         window.openTeacherAuthModal = () => {
+            if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
+                document.getElementById('setting-school-name').value = state.config.schoolName || '이의초등학교';
+                document.getElementById('setting-pwd').value = state.config.teacherPassword || '1234';
+                window.showScreen('screen-teacher');
+                switchTeacherTab('units');
+                return;
+            }
             document.getElementById('teacherPwInput').value = "";
             document.getElementById('modal-teacher-auth').classList.remove('hidden');
             setTimeout(() => { document.getElementById('teacherPwInput').focus(); }, 100);
@@ -2425,12 +2450,12 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
         window.submitTeacherAuth = () => {
             const pw = document.getElementById('teacherPwInput').value.trim();
-            const currentPw = state.config.teacherPassword || "0000";
-            const waurimalPw = localStorage.getItem('waurimal_admin_pw');
-            if (pw === currentPw || pw === "0000" || pw === "1234" || pw === "4657" || pw === "wauri1234" || (waurimalPw && pw === waurimalPw)) {
+            const currentPw = state.config.teacherPassword || "1234";
+            const authOk = window.WaurimalAuth ? window.WaurimalAuth.authenticate(pw) : (pw === currentPw || pw === (localStorage.getItem('waurimal_admin_pw') || "1234"));
+            if (authOk) {
                 closeTeacherAuthModal();
                 document.getElementById('setting-school-name').value = state.config.schoolName || '이의초등학교';
-                document.getElementById('setting-pwd').value = state.config.teacherPassword || '0000';
+                document.getElementById('setting-pwd').value = state.config.teacherPassword || '1234';
                 window.showScreen('screen-teacher');
                 switchTeacherTab('units');
             } else {
@@ -2623,17 +2648,24 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 return;
             }
             const sorted = [...filtered].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
-            tbody.innerHTML = sorted.map(s => `
+            tbody.innerHTML = sorted.map(s => {
+                const safeTitle = window.WaurimalSanitize ? window.WaurimalSanitize(s.unitTitle || '') : (s.unitTitle || '');
+                const safeGrade = window.WaurimalSanitize ? window.WaurimalSanitize(String(s.grade || '')) : (s.grade || '');
+                const safeClass = window.WaurimalSanitize ? window.WaurimalSanitize(String(s.classNum || '')) : (s.classNum || '');
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(s.name || '') : (s.name || '');
+                const safeStuNum = window.WaurimalSanitize ? window.WaurimalSanitize(String(s.stuNum || 1)) : (s.stuNum || 1);
+                return `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-xs">
-                    <td class="p-2.5 text-slate-700 font-bold">${s.unitTitle}</td>
-                    <td class="p-2.5 text-center text-slate-500">${s.grade}학년 ${s.classNum}반</td>
-                    <td class="p-2.5 font-bold">${s.name} <span class="text-[10px] text-slate-400">(${s.stuNum || 1}번)</span></td>
+                    <td class="p-2.5 text-slate-700 font-bold">${safeTitle}</td>
+                    <td class="p-2.5 text-center text-slate-500">${safeGrade}학년 ${safeClass}반</td>
+                    <td class="p-2.5 font-bold">${safeName} <span class="text-[10px] text-slate-400">(${safeStuNum}번)</span></td>
                     <td class="p-2.5 text-right font-black text-blue-600">${s.score}</td>
                     <td class="p-2.5 text-center">
                         <button type="button" onclick="deleteScoreRecord('${s.id}')" class="text-[10px] bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 py-1 rounded font-bold">삭제</button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         };
 
         window.deleteFilteredScores = async () => {
@@ -2686,7 +2718,11 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
                 await setDoc(configRef, { schoolName: newSchool, teacherPassword: newPwd }, { merge: true });
                 state.config.schoolName = newSchool;
                 state.config.teacherPassword = newPwd;
-                localStorage.setItem('waurimal_admin_pw', newPwd);
+                if (window.WaurimalAuth) {
+                    window.WaurimalAuth.setPw(newPwd);
+                } else {
+                    localStorage.setItem('waurimal_admin_pw', newPwd);
+                }
                 window.showToast("설정이 성공적으로 저장되었습니다!");
             } catch(e) {
                 window.showToast("설정 저장 실패");
