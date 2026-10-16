@@ -1118,7 +1118,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         const state = {
             units: [],
             scores: [],
-            config: { schoolName: '이의초등학교', teacherPassword: '0000' },
+            config: { schoolName: '이의초등학교', teacherPassword: '4657' },
             currentUnit: null,
             studentInfo: { grade: 6, classNum: 1, stuNum: 1, name: "도전자", difficulty: "normal", mode: "1인용 게임" },
             userId: null,
@@ -2435,7 +2435,7 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
         window.openTeacherAuthModal = () => {
             if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
                 document.getElementById('setting-school-name').value = state.config.schoolName || '이의초등학교';
-                document.getElementById('setting-pwd').value = state.config.teacherPassword || '1234';
+                document.getElementById('setting-pwd').value = state.config.teacherPassword || '4657';
                 window.showScreen('screen-teacher');
                 switchTeacherTab('units');
                 return;
@@ -2451,12 +2451,12 @@ const LEGACY_DEFAULT_SCORES = [{"id":"0F76va1svVQMv6ysVcFK","name":"이준후","
 
         window.submitTeacherAuth = () => {
             const pw = document.getElementById('teacherPwInput').value.trim();
-            const currentPw = state.config.teacherPassword || "1234";
-            const authOk = window.WaurimalAuth ? window.WaurimalAuth.authenticate(pw) : (pw === currentPw || pw === (localStorage.getItem('waurimal_admin_pw') || "1234"));
+            const currentPw = state.config.teacherPassword || "4657";
+            const authOk = window.WaurimalAuth ? window.WaurimalAuth.authenticate(pw) : (pw === currentPw || pw === (localStorage.getItem('waurimal_admin_pw') || "4657"));
             if (authOk) {
                 closeTeacherAuthModal();
                 document.getElementById('setting-school-name').value = state.config.schoolName || '이의초등학교';
-                document.getElementById('setting-pwd').value = state.config.teacherPassword || '1234';
+                document.getElementById('setting-pwd').value = state.config.teacherPassword || '4657';
                 window.showScreen('screen-teacher');
                 switchTeacherTab('units');
             } else {
